@@ -1,0 +1,124 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// 회의실 모델
+/// - id: 기본 키 (UUID)
+/// - name: 회의실 이름
+/// - building: 건물
+/// - floor: 층
+/// - capacity: 최대 참석 가능 인원
+/// - status: 회의실 상태 (ACTIVE: 사용 가능, CLOSED: 사용 불가)
+model MeetingRoom {
+  id        String        @id @default(uuid())
+  name      String
+  building  String
+  floor     String
+  capacity  Int            // 최대 참석 가능 인원
+  status    RoomStatus    @default(ACTIVE)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  
+  // 관계: 하나의 회의실은 여러 예약을 가질 수 있음
+  reservations Reservation[]
+
+  @@map("meeting_rooms")
+}
+
+/// 예약 모델
+/// - id: 기본 키 (UUID)
+/// - roomId: 회의실 외래 키
+/// - userId: 예약한 사용자 ID (User FK)
+/// - title: 예약 제목
+/// - startAt: 예약 시작 시간
+/// - endAt: 예약 종료 시간
+/// - createdAt: 생성 시간
+/// - updatedAt: 수정 시간
+model Reservation {
+  id        String      @id @default(uuid())
+  roomId    String
+  room      MeetingRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  title     String
+  startAt   DateTime
+  endAt     DateTime
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // 시간 중복 체크 성능 최적화를 위한 복합 인덱스
+  @@index([roomId, startAt, endAt])
+  @@map("reservations")
+}
+
+/// 사용자 모델
+/// - id: 기본 키 (UUID)
+/// - employeeId: 사번 (SSO에서 받아온 값, 고유)
+/// - name: 이름
+/// - email: 이메일 (선택)
+/// - deptId: 부서 ID (Department FK, 선택)
+/// - company: 계열사 (선택)
+/// - role: 사용자 권한 (ADMIN: 관리자, USER: 일반 사용자)
+model User {
+  id          String       @id @default(uuid())
+  employeeId  String       @unique
+  name        String
+  email       String?
+  
+  deptId      String?
+  department  Department?  @relation(fields: [deptId], references: [id], onDelete: SetNull)
+  
+  // 기존 dept 필드는 하위 호환성을 위해 유지하거나 제거 (여기서는 임시 유지하고 마이그레이션 필요 시 제거 고려)
+  dept        String?      // @deprecated
+
+  company     String?
+  role        UserRole     @default(USER)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  // 관계: 하나의 사용자는 여러 예약을 가질 수 있음
+  reservations Reservation[]
+
+  @@map("users")
+}
+
+/// 부서 모델
+/// - id: 부서 코드 (PK)
+/// - name: 부서명
+/// - companyCode: 회사 코드
+/// - companyName: 회사명
+/// - createdAt: 생성 시간
+/// - updatedAt: 수정 시간
+model Department {
+  id          String   @id
+  name        String
+  companyCode String?
+  companyName String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // 관계: 하나의 부서는 여러 사용자를 가질 수 있음
+  users       User[]
+  
+  @@map("departments")
+}
+
+/// 회의실 상태 열거형
+enum RoomStatus {
+  ACTIVE  // 사용 가능
+  CLOSED  // 사용 불가
+}
+
+/// 사용자 권한 열거형
+enum UserRole {
+  ADMIN  // 관리자: 회의실 생성/비활성화, 예약 등록/취소 모두 가능
+  USER   // 일반 사용자: 예약 등록/취소만 가능
+}

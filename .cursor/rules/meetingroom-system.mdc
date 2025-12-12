@@ -1,0 +1,73 @@
+---
+alwaysApply: true
+---
+# Project Summary
+"사내 미팅룸 예약 시스템"을 개발하는 프로젝트.
+현재 회사가 위키로 예약을 수동 관리하고 있어 이를 대체하는 실사용 MVP 웹서비스를 만든다.
+
+# Tech Stack
+Backend: Node.js + Express + TypeScript
+Frontend: React + Vite + TypeScript + TailwindCSS
+DB: PostgreSQL
+ORM: Prisma
+State Query: TanStack Query
+Calendar: FullCalendar 또는 react-big-calendar
+
+# Database Models
+## MeetingRoom
+- id (PK)
+- name
+- location
+- capacity
+- status (ACTIVE / CLOSED)
+
+## Reservation
+- id (PK)
+- roomId (FK -> MeetingRoom)
+- userId
+- title
+- startAt (Datetime)
+- endAt (Datetime)
+- createdAt
+- updatedAt
+
+# Business Rules
+- 동일 회의실의 예약은 startAt~endAt 시간대가 겹치면 안 됨.
+- 예약은 startAt < endAt 이어야 함.
+- 예약 수정 시에도 동일한 중복 체크 필요.
+- 예약 삭제는 본인 취소 기준이지만 MVP에서는 제한하지 않음.
+
+# API Structure
+- GET /rooms
+- GET /reservations?roomId=&date=
+- POST /reservations
+- PUT /reservations/:id
+- DELETE /reservations/:id
+
+# Project Folder Structure Rules
+Backend:
+- src/
+  - routes/
+  - controllers/
+  - services/
+  - models/
+  - config/
+  - app.ts
+  - server.ts
+
+Frontend:
+- src/
+  - pages/
+  - components/
+  - hooks/
+  - api/
+  - layout/
+
+# Code Style Rules
+- 타입 선언은 interfaces보다 type alias 중심.
+- 날짜/시간은 ISO string으로 백엔드-프론트 통일.
+- 서비스 레이어에서 Prisma 호출, 컨트롤러에서는 req/res 핸들링만.
+
+# Output Rules
+- 새로운 파일을 생성할 때는 생성 위치, 파일명, 추가되는 이유를 간단하게 설명.
+- 기존 파일 수정 시 diff 스타일로 바뀐 부분을 보여줘.

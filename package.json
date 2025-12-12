@@ -1,0 +1,34 @@
+{
+  "name": "meetingroom-system",
+  "version": "1.0.0",
+  "description": "사내 미팅룸 예약 시스템",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev": "npm run dev:backend & npm run dev:frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
