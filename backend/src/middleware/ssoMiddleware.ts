@@ -38,6 +38,7 @@ async function getDevUser(): Promise<AuthenticatedUser | null> {
     console.log('[DEV] DB 조회 완료');
     if (user) {
       const authUser = {
+        id: user.id,
         employeeId: user.employeeId,
         name: user.name,
         email: user.email,
@@ -70,6 +71,7 @@ async function getDevUser(): Promise<AuthenticatedUser | null> {
   
   if (firstAdmin) {
     const authUser = {
+      id: firstAdmin.id,
       employeeId: firstAdmin.employeeId,
       name: firstAdmin.name,
       email: firstAdmin.email,
@@ -96,6 +98,7 @@ async function getDevUser(): Promise<AuthenticatedUser | null> {
   
   if (firstUser) {
     const authUser = {
+      id: firstUser.id,
       employeeId: firstUser.employeeId,
       name: firstUser.name,
       email: firstUser.email,
@@ -136,6 +139,7 @@ async function getProdUser(userInfo: SSOUserInfo): Promise<AuthenticatedUser> {
   console.log(`[PROD] DB 조회 완료: ${user.name} (${user.employeeId})`);
   
   const authUser = {
+    id: user.id,
     employeeId: user.employeeId,
     name: user.name,
     email: user.email,
@@ -361,3 +365,20 @@ export async function ssoMiddleware(
     });
   }
 }
+
+/**
+ * 관리자 권한 체크 미들웨어
+ */
+export const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
+  const user = (req as any).user as AuthenticatedUser;
+  
+  if (!user) {
+    return res.status(401).json({ message: '인증이 필요합니다.' });
+  }
+
+  if (user.role !== 'ADMIN') {
+    return res.status(403).json({ message: '관리자 권한이 필요합니다.' });
+  }
+
+  next();
+};

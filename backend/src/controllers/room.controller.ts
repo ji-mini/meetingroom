@@ -10,6 +10,7 @@ export async function getRooms(req: Request, res: Response) {
     const rooms = await roomService.getRooms();
     res.json(rooms);
   } catch (error) {
+    console.error('Error getting rooms:', error);
     res.status(500).json({
       message: '회의실 목록 조회 중 오류가 발생했습니다.',
       detail: error instanceof Error ? error.message : String(error),
@@ -46,6 +47,8 @@ export async function getRoomById(req: Request, res: Response) {
 export async function createRoom(req: Request, res: Response) {
   try {
     const data: CreateRoomDto = req.body;
+    const user = (req as any).user;
+    const actorId = user?.id || user?.employeeId; // employeeId를 fallback으로 사용하지만 원칙적으로는 id여야 함
 
     // 필수 필드 검증
     if (!data.name || !data.building || !data.floor || !data.capacity) {
@@ -61,7 +64,7 @@ export async function createRoom(req: Request, res: Response) {
       });
     }
 
-    const room = await roomService.createRoom(data);
+    const room = await roomService.createRoom(data, actorId);
     res.status(201).json(room);
   } catch (error) {
     res.status(400).json({
@@ -77,7 +80,10 @@ export async function createRoom(req: Request, res: Response) {
 export async function deleteRoom(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    await roomService.deleteRoom(id);
+    const user = (req as any).user;
+    const actorId = user?.id || user?.employeeId; // employeeId를 fallback으로 사용하지만 원칙적으로는 id여야 함
+
+    await roomService.deleteRoom(id, actorId);
     res.status(204).send();
   } catch (error) {
     const statusCode = error instanceof Error && error.message.includes('존재하지') ? 404 : 400;
@@ -110,6 +116,8 @@ export async function updateRoom(req: Request, res: Response) {
   try {
     const { id } = req.params;
     const data: UpdateRoomDto = req.body;
+    const user = (req as any).user;
+    const actorId = user?.id || user?.employeeId; // employeeId를 fallback으로 사용하지만 원칙적으로는 id여야 함
 
     // capacity 검증
     if (data.capacity !== undefined && data.capacity <= 0) {
@@ -123,7 +131,7 @@ export async function updateRoom(req: Request, res: Response) {
       building: data.building,
       floor: data.floor,
       capacity: data.capacity,
-    });
+    }, actorId);
     res.json(room);
   } catch (error) {
     const statusCode = error instanceof Error && error.message.includes('존재하지') ? 404 : 400;
@@ -140,7 +148,9 @@ export async function updateRoom(req: Request, res: Response) {
 export async function toggleRoomStatus(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const room = await roomService.toggleRoomStatus(id);
+    const user = (req as any).user;
+    const actorId = user?.id || user?.employeeId; // employeeId를 fallback으로 사용하지만 원칙적으로는 id여야 함
+    const room = await roomService.toggleRoomStatus(id, actorId);
     res.json(room);
   } catch (error) {
     const statusCode = error instanceof Error && error.message.includes('존재하지') ? 404 : 400;
@@ -157,7 +167,9 @@ export async function toggleRoomStatus(req: Request, res: Response) {
 export async function closeRoom(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const room = await roomService.closeRoom(id);
+    const user = (req as any).user;
+    const actorId = user?.id || user?.employeeId; // employeeId를 fallback으로 사용하지만 원칙적으로는 id여야 함
+    const room = await roomService.closeRoom(id, actorId);
     res.status(200).json(room);
   } catch (error) {
     const statusCode = error instanceof Error && error.message.includes('존재하지') ? 404 : 400;
@@ -167,5 +179,3 @@ export async function closeRoom(req: Request, res: Response) {
     });
   }
 }
-
-

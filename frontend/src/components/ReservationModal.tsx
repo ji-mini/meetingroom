@@ -14,7 +14,13 @@ import {
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Select } from './ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 import { Alert } from './ui/alert';
 import { Calendar } from './ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
@@ -293,18 +299,24 @@ function ReservationModal({
             <div className="space-y-2">
               <Label htmlFor="roomId">회의실 *</Label>
               <Select
-                id="roomId"
-                name="roomId"
                 value={formData.roomId}
-                onChange={handleChange}
+                onValueChange={(value) =>
+                  handleChange({
+                    target: { name: 'roomId', value },
+                  } as any)
+                }
                 required
               >
-                <option value="">회의실을 선택하세요</option>
-                {activeRooms.map((room) => (
-                  <option key={room.id} value={room.id}>
-                    {room.name} · {room.building} {room.floor} · 최대 {room.capacity}명
-                  </option>
-                ))}
+                <SelectTrigger id="roomId">
+                  <SelectValue placeholder="회의실을 선택하세요" />
+                </SelectTrigger>
+                <SelectContent>
+                  {activeRooms.map((room) => (
+                    <SelectItem key={room.id} value={room.id}>
+                      {room.name} · {room.building} {room.floor} · 최대 {room.capacity}명
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
 
@@ -388,36 +400,48 @@ function ReservationModal({
               <div className="space-y-2">
                 <Label htmlFor="startTime">시작 시간 *</Label>
                 <Select
-                  id="startTime"
-                  name="startTime"
                   value={formData.startTime}
-                  onChange={handleChange}
+                  onValueChange={(value) =>
+                    handleChange({
+                      target: { name: 'startTime', value },
+                    } as any)
+                  }
                   required
                 >
-                  <option value="">시작 시간 선택</option>
-                  {allTimeOptions.map((time) => (
-                    <option key={time} value={time}>
-                      {time}
-                    </option>
-                  ))}
+                  <SelectTrigger id="startTime">
+                    <SelectValue placeholder="시작 시간 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allTimeOptions.map((time) => (
+                      <SelectItem key={time} value={time}>
+                        {time}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="endTime">종료 시간 *</Label>
                 <Select
-                  id="endTime"
-                  name="endTime"
                   value={formData.endTime}
-                  onChange={handleChange}
+                  onValueChange={(value) =>
+                    handleChange({
+                      target: { name: 'endTime', value },
+                    } as any)
+                  }
                   required
                   disabled={!formData.startTime}
                 >
-                  <option value="">종료 시간 선택</option>
-                  {endTimeOptions.map((time) => (
-                    <option key={time} value={time}>
-                      {time}
-                    </option>
-                  ))}
+                  <SelectTrigger id="endTime">
+                    <SelectValue placeholder="종료 시간 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {endTimeOptions.map((time) => (
+                      <SelectItem key={time} value={time}>
+                        {time}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
             </div>

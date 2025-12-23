@@ -15,6 +15,7 @@ export async function getReservations(req: Request, res: Response) {
     const reservations = await reservationService.getReservations(query);
     res.json(reservations);
   } catch (error) {
+    console.error('Error getting reservations:', error);
     res.status(500).json({
       message: '예약 목록 조회 중 오류가 발생했습니다.',
       detail: error instanceof Error ? error.message : String(error),
@@ -83,7 +84,9 @@ export async function updateReservation(req: Request, res: Response) {
   try {
     const { id } = req.params;
     const data: UpdateReservationDto = req.body;
-    const reservation = await reservationService.updateReservation(id, data);
+    const actorId = (req as any).user?.id;
+
+    const reservation = await reservationService.updateReservation(id, data, actorId);
     res.json(reservation);
   } catch (error) {
     const statusCode = error instanceof Error && error.message.includes('존재하지') ? 404 : 400;
@@ -107,7 +110,9 @@ export async function deleteReservation(req: Request, res: Response) {
     }
 
     const { id } = req.params;
-    await reservationService.deleteReservation(id, user.employeeId);
+    const actorId = user.id;
+
+    await reservationService.deleteReservation(id, user.employeeId, actorId);
     res.status(204).send();
   } catch (error) {
     let statusCode = 500;
@@ -125,7 +130,3 @@ export async function deleteReservation(req: Request, res: Response) {
     });
   }
 }
-
-
-
-

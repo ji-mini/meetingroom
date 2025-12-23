@@ -1,5 +1,6 @@
 import prisma from '../config/database.js';
 import type { CreateRoomDto } from '../types/room.js';
+import { logAction } from '../utils/audit.js';
 
 /**
  * 회의실 목록 조회 (ACTIVE 상태만)
@@ -23,7 +24,7 @@ export async function getRooms() {
 export async function getAllRooms() {
   return await prisma.meetingRoom.findMany({
     orderBy: [
-      { createdAt: 'desc' },
+      { name: 'asc' },
     ],
   });
 }
@@ -40,16 +41,8 @@ export async function getRoomById(id: string) {
 /**
  * 회의실 생성
  */
-export async function createRoom(data: CreateRoomDto) {
-  // 이름 중복 체크 (선택사항 - 필요시 활성화)
-  // const existing = await prisma.meetingRoom.findFirst({
-  //   where: { name: data.name, building: data.building, floor: data.floor },
-  // });
-  // if (existing) {
-  //   throw new Error('같은 위치에 동일한 이름의 회의실이 이미 존재합니다.');
-  // }
-
-  return await prisma.meetingRoom.create({
+export async function createRoom(data: CreateRoomDto, actorId?: string) {
+  const room = await prisma.meetingRoom.create({
     data: {
       name: data.name,
       building: data.building,
@@ -58,12 +51,15 @@ export async function createRoom(data: CreateRoomDto) {
       status: data.status || 'ACTIVE',
     },
   });
+
+  await logAction('CREATE', 'MEETING_ROOM', room.id, room, actorId);
+  return room;
 }
 
 /**
  * 회의실 삭제
  */
-export async function deleteRoom(id: string) {
+export async function deleteRoom(id: string, actorId?: string) {
   // 회의실 존재 확인
   const room = await prisma.meetingRoom.findUnique({
     where: { id },
@@ -81,15 +77,18 @@ export async function deleteRoom(id: string) {
     throw new Error('예약이 있는 회의실은 삭제할 수 없습니다.');
   }
 
-  return await prisma.meetingRoom.delete({
+  const deleted = await prisma.meetingRoom.delete({
     where: { id },
   });
+
+  await logAction('DELETE', 'MEETING_ROOM', id, { name: room.name }, actorId);
+  return deleted;
 }
 
 /**
  * 회의실 CLOSED 상태로 변경
  */
-export async function closeRoom(id: string) {
+export async function closeRoom(id: string, actorId?: string) {
   // 회의실 존재 확인
   const room = await prisma.meetingRoom.findUnique({
     where: { id },
@@ -103,18 +102,21 @@ export async function closeRoom(id: string) {
     throw new Error('이미 비활성화된 회의실입니다.');
   }
 
-  return await prisma.meetingRoom.update({
+  const updated = await prisma.meetingRoom.update({
     where: { id },
     data: {
       status: 'CLOSED',
     },
   });
+
+  await logAction('UPDATE', 'MEETING_ROOM', id, { status: 'CLOSED' }, actorId);
+  return updated;
 }
 
 /**
  * 회의실 정보 수정
  */
-export async function updateRoom(id: string, data: { name?: string; building?: string; floor?: string; capacity?: number }) {
+export async function updateRoom(id: string, data: { name?: string; building?: string; floor?: string; capacity?: number }, actorId?: string) {
   const room = await prisma.meetingRoom.findUnique({
     where: { id },
   });
@@ -123,7 +125,7 @@ export async function updateRoom(id: string, data: { name?: string; building?: s
     throw new Error('존재하지 않는 회의실입니다.');
   }
 
-  return await prisma.meetingRoom.update({
+  const updated = await prisma.meetingRoom.update({
     where: { id },
     data: {
       ...(data.name !== undefined && { name: data.name }),
@@ -132,13 +134,16 @@ export async function updateRoom(id: string, data: { name?: string; building?: s
       ...(data.capacity !== undefined && { capacity: data.capacity }),
     },
   });
+
+  await logAction('UPDATE', 'MEETING_ROOM', id, data, actorId);
+  return updated;
 }
 
 /**
  * 회의실 활성/비활성 토글
  * 비활성화 시 미래 예약이 있으면 불가
  */
-export async function toggleRoomStatus(id: string) {
+export async function toggleRoomStatus(id: string, actorId?: string) {
   const room = await prisma.meetingRoom.findUnique({
     where: { id },
     include: {
@@ -163,12 +168,13 @@ export async function toggleRoomStatus(id: string) {
 
   const newStatus = room.status === 'ACTIVE' ? 'CLOSED' : 'ACTIVE';
 
-  return await prisma.meetingRoom.update({
+  const updated = await prisma.meetingRoom.update({
     where: { id },
     data: {
       status: newStatus,
     },
   });
+
+  await logAction('UPDATE', 'MEETING_ROOM', id, { status: newStatus }, actorId);
+  return updated;
 }
-
-

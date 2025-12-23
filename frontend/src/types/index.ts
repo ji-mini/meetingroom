@@ -1,10 +1,14 @@
 export interface MeetingRoom {
   id: string;
   name: string;
-  location: string;
+  building: string;
+  floor: string;
   capacity: number;
   status: 'ACTIVE' | 'CLOSED';
-  facilities?: string[]; // 선택적 속성 추가
+  hasMonitor: boolean;
+  hasProjector: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Reservation {

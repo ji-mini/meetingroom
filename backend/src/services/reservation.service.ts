@@ -2,6 +2,7 @@ import prisma from '../config/database.js';
 import type { CreateReservationDto, UpdateReservationDto, ReservationQuery } from '../types/reservation.js';
 import { getUserByEmployeeId } from './user.service.js';
 import { Prisma } from '@prisma/client';
+import { logAction } from '../utils/audit.js';
 
 /**
  * 운영 시간 및 점심시간 체크
@@ -175,6 +176,15 @@ export async function createReservation(data: CreateReservationDto) {
       } as any,
     },
   });
+  
+  if (newReservation) {
+    await logAction('CREATE', 'RESERVATION', newReservation.id, {
+      title: newReservation.title,
+      roomId: newReservation.roomId,
+      startAt: newReservation.startAt,
+      endAt: newReservation.endAt,
+    }, userId || undefined);
+  }
 
   return mapReservation(newReservation);
 }
@@ -245,7 +255,7 @@ export async function getReservationById(id: string) {
   return mapReservation(reservation);
 }
 
-export async function updateReservation(id: string, data: UpdateReservationDto) {
+export async function updateReservation(id: string, data: UpdateReservationDto, actorId?: string) {
   const existing = await prisma.reservation.findUnique({
     where: { id },
   });
@@ -312,6 +322,11 @@ export async function updateReservation(id: string, data: UpdateReservationDto) 
         } as any,
       },
     });
+
+    if (updated) {
+      await logAction('UPDATE', 'RESERVATION', id, data, actorId);
+    }
+
     return mapReservation(updated);
   }
 
@@ -329,10 +344,15 @@ export async function updateReservation(id: string, data: UpdateReservationDto) 
       } as any,
     },
   });
+
+  if (updated) {
+    await logAction('UPDATE', 'RESERVATION', id, { title: data.title }, actorId);
+  }
+
   return mapReservation(updated);
 }
 
-export async function deleteReservation(id: string, employeeId?: string) {
+export async function deleteReservation(id: string, employeeId?: string, actorId?: string) {
   const existing = await prisma.reservation.findUnique({
     where: { id },
     include: {
@@ -350,7 +370,16 @@ export async function deleteReservation(id: string, employeeId?: string) {
     }
   }
 
-  return await prisma.reservation.delete({
+  // userId from employeeId for log if actorId is not provided (which might be the case for deleteReservation with employeeId check)
+  // But caller should provide actorId (uuid) for logging properly. 
+  // If not provided, we can try to use existing.userId if it matches employeeId... but safest is passed actorId.
+  // For now, if actorId is missing, we log it as anonymous or system if userId is null.
+
+  const result = await prisma.reservation.delete({
     where: { id },
   });
+
+  await logAction('DELETE', 'RESERVATION', id, { title: existing.title }, actorId || existing.userId || undefined);
+
+  return result;
 }

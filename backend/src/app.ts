@@ -6,6 +6,7 @@ import roomRoutes from './routes/room.routes.js';
 import reservationRoutes from './routes/reservation.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
+import auditRoutes from './routes/audit.routes.js';
 import { env } from './config/env.js';
 
 const app = express();
@@ -36,9 +37,17 @@ app.use(express.json());
 // 1. 인증 라우트 (항상 인증 필요)
 app.use('/api/auth', ssoMiddleware, authRoutes);
 app.use('/api/users', ssoMiddleware, userRoutes);
+app.use('/api/audit-logs', auditRoutes);
 
 // 2. 룸 라우트 (GET은 인증 선택, 나머지는 인증 필수)
 app.use('/api/rooms', (req, res, next) => {
+  // GET /api/rooms/all 요청은 관리자 권한이 필요하므로 ssoMiddleware 적용
+  // Express router는 path matching 전에 미들웨어를 실행하므로 req.path는 '/api/rooms'가 제거된 나머지 경로가 아니라
+  // app.use에 마운트된 시점의 경로일 수 있음. 하지만 여기서는 app.use의 콜백이므로 req.url을 확인해야 함.
+  // req.url은 마운트 포인트 이후의 경로를 가리킴 (예: /all)
+  if (req.method === 'GET' && req.url === '/all') {
+    return ssoMiddleware(req, res, next);
+  }
   if (req.method === 'GET') {
     return optionalAuthMiddleware(req, res, next);
   }

@@ -16,6 +16,7 @@ export interface Department {
 }
 
 export interface AuthenticatedUser {
+  id: string;
   employeeId: string;
   name: string;
   email: string | null;

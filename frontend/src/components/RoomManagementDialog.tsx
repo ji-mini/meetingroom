@@ -119,8 +119,12 @@ function RoomManagementDialog({ open, onOpenChange, isAdmin, onSuccess }: RoomMa
           <DialogHeader>
             <DialogTitle>회의실 관리</DialogTitle>
           </DialogHeader>
-          <Alert>
-            회의실 목록을 불러오는 중 오류가 발생했습니다.
+          <Alert variant="destructive">
+            <div className="text-sm font-semibold mb-1">회의실 목록을 불러오는 중 오류가 발생했습니다.</div>
+            <div className="text-xs">
+              {(fetchError as AxiosError<{ message?: string }>)?.response?.data?.message || 
+               (fetchError as Error).message}
+            </div>
           </Alert>
         </DialogContent>
       </Dialog>
