@@ -29,7 +29,14 @@ export const roomApi = {
   /**
    * 회의실 생성
    */
-  createRoom: async (payload: { name: string; building: string; floor: string; capacity: number }) => {
+  createRoom: async (payload: { 
+    name: string; 
+    building: string; 
+    floor: string; 
+    capacity: number;
+    hasMonitor?: boolean;
+    hasProjector?: boolean;
+  }) => {
     const { data } = await apiClient.post<MeetingRoom>('/rooms', payload);
     return data;
   },
@@ -37,7 +44,14 @@ export const roomApi = {
   /**
    * 회의실 정보 수정
    */
-  updateRoom: async (id: string, payload: { name?: string; building?: string; floor?: string; capacity?: number }): Promise<MeetingRoom> => {
+  updateRoom: async (id: string, payload: { 
+    name?: string; 
+    building?: string; 
+    floor?: string; 
+    capacity?: number;
+    hasMonitor?: boolean;
+    hasProjector?: boolean;
+  }): Promise<MeetingRoom> => {
     const { data } = await apiClient.put<MeetingRoom>(`/rooms/${id}`, payload);
     return data;
   },

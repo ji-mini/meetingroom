@@ -48,6 +48,8 @@ export async function createRoom(data: CreateRoomDto, actorId?: string) {
       building: data.building,
       floor: data.floor,
       capacity: data.capacity,
+      hasMonitor: data.hasMonitor ?? false,
+      hasProjector: data.hasProjector ?? false,
       status: data.status || 'ACTIVE',
     },
   });
@@ -116,7 +118,7 @@ export async function closeRoom(id: string, actorId?: string) {
 /**
  * 회의실 정보 수정
  */
-export async function updateRoom(id: string, data: { name?: string; building?: string; floor?: string; capacity?: number }, actorId?: string) {
+export async function updateRoom(id: string, data: { name?: string; building?: string; floor?: string; capacity?: number; hasMonitor?: boolean; hasProjector?: boolean }, actorId?: string) {
   const room = await prisma.meetingRoom.findUnique({
     where: { id },
   });
@@ -132,6 +134,8 @@ export async function updateRoom(id: string, data: { name?: string; building?: s
       ...(data.building !== undefined && { building: data.building }),
       ...(data.floor !== undefined && { floor: data.floor }),
       ...(data.capacity !== undefined && { capacity: data.capacity }),
+      ...(data.hasMonitor !== undefined && { hasMonitor: data.hasMonitor }),
+      ...(data.hasProjector !== undefined && { hasProjector: data.hasProjector }),
     },
   });
 

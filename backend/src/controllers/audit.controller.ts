@@ -7,12 +7,16 @@ export async function getAuditLogs(req: Request, res: Response) {
     const limit = Number(req.query.limit) || 20;
     const action = req.query.action as string;
     const entity = req.query.entity as string;
+    const date = req.query.date as string;
+    const userName = req.query.userName as string;
 
     const result = await auditService.getAuditLogs({
       page,
       limit,
       action,
       entity,
+      date,
+      userName,
     });
 
     res.json(result);

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import { Calendar as CalendarIcon, X } from 'lucide-react';
 import { auditApi } from '@/api/audit.api';
 import {
   Dialog,
@@ -26,6 +27,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 interface AuditLogDialogProps {
   open: boolean;
@@ -51,14 +56,19 @@ export default function AuditLogDialog({ open, onOpenChange, isAdmin }: AuditLog
   const [page, setPage] = useState(1);
   const [action, setAction] = useState<string>('ALL');
   const [entity, setEntity] = useState<string>('ALL');
+  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [userName, setUserName] = useState('');
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['audit-logs', page, action, entity],
+    queryKey: ['audit-logs', page, action, entity, date ? format(date, 'yyyy-MM-dd') : null, userName],
     queryFn: () => auditApi.getLogs({
       page,
       limit: 20,
       action: action === 'ALL' ? undefined : action,
       entity: entity === 'ALL' ? undefined : entity,
+      date: date ? format(date, 'yyyy-MM-dd') : undefined,
+      userName: userName || undefined,
     }),
     enabled: open && isAdmin,
   });
@@ -72,7 +82,50 @@ export default function AuditLogDialog({ open, onOpenChange, isAdmin }: AuditLog
           <DialogTitle>로그 관리</DialogTitle>
         </DialogHeader>
 
-        <div className="flex gap-4 mb-4">
+        <div className="flex gap-4 mb-4 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    'w-[200px] justify-start text-left font-normal',
+                    !date && 'text-muted-foreground'
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? format(date, 'yyyy-MM-dd') : <span>날짜 선택 (전체)</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(newDate) => {
+                    setDate(newDate);
+                    setPage(1);
+                    setIsCalendarOpen(false);
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            {date && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setDate(undefined);
+                  setPage(1);
+                }}
+                className="h-9 w-9"
+                title="날짜 필터 해제"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
           <Select value={action} onValueChange={(val) => { setAction(val); setPage(1); }}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="작업 유형" />
@@ -95,6 +148,16 @@ export default function AuditLogDialog({ open, onOpenChange, isAdmin }: AuditLog
               <SelectItem value="MEETING_ROOM">회의실</SelectItem>
             </SelectContent>
           </Select>
+
+          <Input
+            placeholder="작업자 이름 검색"
+            value={userName}
+            onChange={(e) => {
+              setUserName(e.target.value);
+              setPage(1);
+            }}
+            className="w-[180px]"
+          />
         </div>
 
         <div className="flex-1 overflow-hidden border rounded-md">

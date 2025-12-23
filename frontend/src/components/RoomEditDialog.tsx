@@ -14,6 +14,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Alert } from './ui/alert';
+import { Checkbox } from './ui/checkbox';
 import { roomApi } from '@/api/room.api';
 import type { MeetingRoom } from '@/types';
 
@@ -30,6 +31,8 @@ function RoomEditDialog({ open, room, onOpenChange, onSuccess }: RoomEditDialogP
     building: room.building,
     floor: room.floor,
     capacity: room.capacity,
+    hasMonitor: room.hasMonitor || false,
+    hasProjector: room.hasProjector || false,
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -41,13 +44,15 @@ function RoomEditDialog({ open, room, onOpenChange, onSuccess }: RoomEditDialogP
         building: room.building,
         floor: room.floor,
         capacity: room.capacity,
+        hasMonitor: room.hasMonitor || false,
+        hasProjector: room.hasProjector || false,
       });
       setError(null);
     }
   }, [room]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: { name?: string; building?: string; floor?: string; capacity?: number }) =>
+    mutationFn: (data: { name?: string; building?: string; floor?: string; capacity?: number; hasMonitor?: boolean; hasProjector?: boolean }) =>
       roomApi.updateRoom(room.id, data),
     onSuccess: () => {
       onSuccess();
@@ -89,6 +94,8 @@ function RoomEditDialog({ open, room, onOpenChange, onSuccess }: RoomEditDialogP
       building: formValues.building.trim(),
       floor: formValues.floor.trim(),
       capacity: formValues.capacity,
+      hasMonitor: formValues.hasMonitor,
+      hasProjector: formValues.hasProjector,
     });
   };
 
@@ -151,6 +158,29 @@ function RoomEditDialog({ open, room, onOpenChange, onSuccess }: RoomEditDialogP
               onChange={handleChange}
               required
             />
+          </div>
+
+          <div className="flex gap-6 pt-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="edit-hasMonitor" 
+                checked={formValues.hasMonitor}
+                onCheckedChange={(checked) => 
+                  setFormValues(prev => ({ ...prev, hasMonitor: checked === true }))
+                }
+              />
+              <Label htmlFor="edit-hasMonitor" className="cursor-pointer">모니터 있음</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="edit-hasProjector" 
+                checked={formValues.hasProjector}
+                onCheckedChange={(checked) => 
+                  setFormValues(prev => ({ ...prev, hasProjector: checked === true }))
+                }
+              />
+              <Label htmlFor="edit-hasProjector" className="cursor-pointer">빔프로젝터 있음</Label>
+            </div>
           </div>
 
           {error && <Alert>{error}</Alert>}

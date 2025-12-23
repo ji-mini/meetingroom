@@ -131,6 +131,8 @@ export async function updateRoom(req: Request, res: Response) {
       building: data.building,
       floor: data.floor,
       capacity: data.capacity,
+      hasMonitor: data.hasMonitor,
+      hasProjector: data.hasProjector,
     }, actorId);
     res.json(room);
   } catch (error) {

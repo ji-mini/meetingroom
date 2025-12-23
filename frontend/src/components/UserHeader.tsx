@@ -1,4 +1,4 @@
-import { User, LogOut, Settings, Users, Monitor } from 'lucide-react';
+import { User, LogOut, Settings, Users, Monitor, FileText } from 'lucide-react';
 import { Button } from './ui/button';
 import type { MeResponse } from '../types';
 
@@ -10,6 +10,7 @@ interface UserHeaderProps {
   onCheckLogin: () => Promise<boolean>;
   onClickManageRooms: () => void;
   onClickManageRoles: () => void;
+  onClickAuditLogs: () => void;
 }
 
 const UserHeader = ({
@@ -19,6 +20,7 @@ const UserHeader = ({
   onLogout,
   onClickManageRooms,
   onClickManageRoles,
+  onClickAuditLogs,
 }: UserHeaderProps) => {
   const isAdmin = user?.role === 'ADMIN';
 
@@ -75,6 +77,15 @@ const UserHeader = ({
                     >
                       <Users className="w-4 h-4 mr-2" />
                       사용자 관리
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={onClickAuditLogs} 
+                      className="text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 hidden sm:flex"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      로그 관리
                     </Button>
                   </>
                 )}

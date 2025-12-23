@@ -14,6 +14,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Alert } from './ui/alert';
+import { Checkbox } from './ui/checkbox';
 import { roomApi } from '@/api/room.api';
 
 export type NewRoomFormValues = {
@@ -21,6 +22,8 @@ export type NewRoomFormValues = {
   building: string;
   floor: string;
   capacity: number;
+  hasMonitor: boolean;
+  hasProjector: boolean;
 };
 
 type RoomCreateDialogProps = {
@@ -35,6 +38,8 @@ function RoomCreateDialog({ open, onOpenChange, onSuccess }: RoomCreateDialogPro
     building: '',
     floor: '',
     capacity: 1,
+    hasMonitor: false,
+    hasProjector: false,
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -43,7 +48,14 @@ function RoomCreateDialog({ open, onOpenChange, onSuccess }: RoomCreateDialogPro
     onSuccess: () => {
       onSuccess();
       onOpenChange(false);
-      setFormValues({ name: '', building: '', floor: '', capacity: 1 });
+      setFormValues({ 
+        name: '', 
+        building: '', 
+        floor: '', 
+        capacity: 1,
+        hasMonitor: false,
+        hasProjector: false,
+      });
     },
     onError: (err: AxiosError<{ message?: string }>) => {
       console.error('회의실 생성 실패', err);
@@ -90,6 +102,8 @@ function RoomCreateDialog({ open, onOpenChange, onSuccess }: RoomCreateDialogPro
       building: formValues.building.trim(),
       floor: formValues.floor.trim(),
       capacity: formValues.capacity,
+      hasMonitor: formValues.hasMonitor,
+      hasProjector: formValues.hasProjector,
     });
   };
 
@@ -151,6 +165,29 @@ function RoomCreateDialog({ open, onOpenChange, onSuccess }: RoomCreateDialogPro
                 onChange={handleChange}
                 required
               />
+            </div>
+          </div>
+
+          <div className="flex gap-6 pt-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="hasMonitor" 
+                checked={formValues.hasMonitor}
+                onCheckedChange={(checked) => 
+                  setFormValues(prev => ({ ...prev, hasMonitor: checked === true }))
+                }
+              />
+              <Label htmlFor="hasMonitor" className="cursor-pointer">모니터 있음</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="hasProjector" 
+                checked={formValues.hasProjector}
+                onCheckedChange={(checked) => 
+                  setFormValues(prev => ({ ...prev, hasProjector: checked === true }))
+                }
+              />
+              <Label htmlFor="hasProjector" className="cursor-pointer">빔프로젝터 있음</Label>
             </div>
           </div>
 

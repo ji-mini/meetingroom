@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { AxiosError } from 'axios';
 import { format } from 'date-fns';
+import { Check, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -207,9 +208,11 @@ function RoomManagementDialog({ open, onOpenChange, isAdmin, onSuccess }: RoomMa
                   <div className="col-span-1">건물</div>
                   <div className="col-span-1">층</div>
                   <div className="col-span-1 text-center">수용 인원</div>
+                  <div className="col-span-1 text-center">모니터</div>
+                  <div className="col-span-1 text-center">빔프로젝터</div>
                   <div className="col-span-1 text-center">상태</div>
-                  <div className="col-span-2">생성일</div>
-                  <div className="col-span-4 text-right">작업</div>
+                  <div className="col-span-1">생성일</div>
+                  <div className="col-span-3 text-right">작업</div>
                 </div>
 
                 {/* 테이블 행 */}
@@ -226,6 +229,20 @@ function RoomManagementDialog({ open, onOpenChange, isAdmin, onSuccess }: RoomMa
                       <div className="col-span-1 text-center text-sm">
                         {room.capacity}명
                       </div>
+                      <div className="col-span-1 flex justify-center">
+                        {room.hasMonitor ? (
+                          <Check className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <X className="h-4 w-4 text-gray-300" />
+                        )}
+                      </div>
+                      <div className="col-span-1 flex justify-center">
+                        {room.hasProjector ? (
+                          <Check className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <X className="h-4 w-4 text-gray-300" />
+                        )}
+                      </div>
                       <div className="col-span-1 text-center">
                         <span
                           className={`inline-block px-2 py-1 text-xs rounded ${
@@ -237,10 +254,10 @@ function RoomManagementDialog({ open, onOpenChange, isAdmin, onSuccess }: RoomMa
                           {room.status === 'ACTIVE' ? '활성' : '비활성'}
                         </span>
                       </div>
-                      <div className="col-span-2 text-sm text-muted-foreground">
+                      <div className="col-span-1 text-sm text-muted-foreground truncate" title={format(new Date(room.createdAt), 'yyyy-MM-dd')}>
                         {format(new Date(room.createdAt), 'yyyy-MM-dd')}
                       </div>
-                      <div className="col-span-4 flex items-center justify-end gap-2">
+                      <div className="col-span-3 flex items-center justify-end gap-2">
                         <Button
                           variant={room.status === 'ACTIVE' ? 'destructive' : 'default'}
                           size="sm"

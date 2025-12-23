@@ -3,6 +3,8 @@ export type CreateRoomDto = {
   building: string;
   floor: string;
   capacity: number; // 최대 참석 가능 인원
+  hasMonitor?: boolean;
+  hasProjector?: boolean;
   status?: 'ACTIVE' | 'CLOSED';
 };
 
@@ -11,6 +13,8 @@ export type UpdateRoomDto = {
   building?: string;
   floor?: string;
   capacity?: number;
+  hasMonitor?: boolean;
+  hasProjector?: boolean;
   status?: 'ACTIVE' | 'CLOSED';
 };
 

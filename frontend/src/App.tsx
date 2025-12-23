@@ -11,6 +11,7 @@ import ReservationModal from './components/ReservationModal';
 import UserHeader from './components/UserHeader';
 import UserManagementDialog from './components/UserManagementDialog';
 import RoomManagementDialog from './components/RoomManagementDialog';
+import AuditLogDialog from './components/AuditLogDialog';
 import { Alert } from './components/ui/alert';
 import { Label } from './components/ui/label';
 import { Switch } from './components/ui/switch';
@@ -34,6 +35,7 @@ function App() {
   const [user, setUser] = useState<MeResponse | null>(null);
   const [userManagementOpen, setUserManagementOpen] = useState(false);
   const [roomManagementOpen, setRoomManagementOpen] = useState(false);
+  const [auditLogOpen, setAuditLogOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showMyReservations, setShowMyReservations] = useState(false);
   const [showTeamReservations, setShowTeamReservations] = useState(false);
@@ -245,6 +247,7 @@ function App() {
         onCheckLogin={checkLoginStatus}
         onClickManageRooms={() => setRoomManagementOpen(true)}
         onClickManageRoles={() => setUserManagementOpen(true)}
+        onClickAuditLogs={() => setAuditLogOpen(true)}
       />
       <div className="container mx-auto px-4 py-10 space-y-8">
         <header className="space-y-6">
@@ -426,6 +429,11 @@ function App() {
           <UserManagementDialog
             open={userManagementOpen}
             onOpenChange={setUserManagementOpen}
+          />
+          <AuditLogDialog
+            open={auditLogOpen}
+            onOpenChange={setAuditLogOpen}
+            isAdmin={isAdmin}
           />
         </>
       )}

@@ -18,8 +18,8 @@ export interface AuditLogQuery {
   limit: number;
   action?: string;
   entity?: string;
-  startDate?: string;
-  endDate?: string;
+  date?: string;
+  userName?: string;
 }
 
 export interface AuditLogResponse {
