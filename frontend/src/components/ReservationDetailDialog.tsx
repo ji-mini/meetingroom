@@ -39,8 +39,11 @@ function ReservationDetailDialog({
   const timeRange = `${format(startDate, 'HH:mm')} ~ ${format(endDate, 'HH:mm')}`;
   const dateStr = format(startDate, 'yyyy년 MM월 dd일');
 
-  // 본인 예약 여부 확인 (user.employeeId와 현재 사용자 employeeId 비교)
-  const isMyReservation = currentUser && reservation.user?.employeeId === currentUser.employeeId;
+  // 예약 취소 권한 확인 (본인 예약이거나 관리자인 경우)
+  const canCancel = currentUser && (
+    reservation.user?.employeeId === currentUser.employeeId || 
+    currentUser.role === 'ADMIN'
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -92,7 +95,7 @@ function ReservationDetailDialog({
             </div>
           )}
 
-          {isLoggedIn && isMyReservation && onRequestCancel && (
+          {isLoggedIn && canCancel && onRequestCancel && (
             <div className="flex justify-end pt-4 border-t">
               <Button
                 variant="destructive"

@@ -206,12 +206,12 @@ function ReservationModal({
     setError('');
   };
 
-  // 30분 단위 시간 옵션 생성 (08:00 ~ 19:00, 점심시간 제외)
+  // 30분 단위 시간 옵션 생성 (08:00 ~ 18:00, 점심시간 제외)
   // 점심시간: 11:30 ~ 12:30
   // 11:00-11:30 예약 가능, 11:30-12:30 예약 불가, 13:00 이후 예약 가능
   const generateTimeOptions = () => {
     const options = [];
-    for (let hour = 8; hour <= 19; hour++) {
+    for (let hour = 8; hour <= 18; hour++) {
       if (hour === 11) {
         // 11:00만 포함 (11:30은 점심시간 시작이므로 제외)
         options.push('11:00');
@@ -220,8 +220,8 @@ function ReservationModal({
         // 13:00부터 다시 시작
       } else {
         options.push(`${hour.toString().padStart(2, '0')}:00`);
-        if (hour < 19) {
-          // 19:00은 마지막이므로 19:30은 없음
+        if (hour < 18) {
+          // 18:00은 마지막이므로 18:30은 없음
           options.push(`${hour.toString().padStart(2, '0')}:30`);
         }
       }
@@ -306,12 +306,12 @@ function ReservationModal({
         const nextMinute = nextTimeMinutes % 60;
         const nextTime = `${nextHour.toString().padStart(2, '0')}:${nextMinute.toString().padStart(2, '0')}`;
         
-        // 다음 시간이 19:00 이하인 경우에만 설정
-        if (nextTimeMinutes <= 19 * 60) {
+        // 다음 시간이 18:00 이하인 경우에만 설정
+        if (nextTimeMinutes <= 18 * 60) {
           setFormData((prev) => ({ ...prev, endTime: nextTime }));
         } else {
-          // 19:00을 초과하면 19:00으로 설정
-          setFormData((prev) => ({ ...prev, endTime: '19:00' }));
+          // 18:00을 초과하면 18:00으로 설정
+          setFormData((prev) => ({ ...prev, endTime: '18:00' }));
         }
       }
     }
