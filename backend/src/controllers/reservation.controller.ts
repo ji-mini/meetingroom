@@ -69,6 +69,15 @@ export async function createReservation(req: Request, res: Response) {
     const reservation = await reservationService.createReservation(reservationData);
     res.status(201).json(reservation);
   } catch (error) {
+    // 정기예약 충돌 에러 처리
+    if (error instanceof Error && (error as any).code === 'CONFLICT_RECURRING') {
+      return res.status(409).json({
+        message: '일부 날짜에 예약 충돌이 있습니다.',
+        conflicts: (error as any).conflicts,
+        code: 'CONFLICT_RECURRING',
+      });
+    }
+
     const statusCode = error instanceof Error && error.message.includes('존재하지') ? 404 : 400;
     res.status(statusCode).json({
       message: error instanceof Error ? error.message : '예약 생성 중 오류가 발생했습니다.',
@@ -110,9 +119,15 @@ export async function deleteReservation(req: Request, res: Response) {
     }
 
     const { id } = req.params;
+    const scope = req.query.scope as 'this' | 'all' | undefined;
     const actorId = user.id;
 
-    await reservationService.deleteReservation(id, user.employeeId, actorId);
+    // ADMIN이면 employeeId 체크 건너뛰기 위해 null 전달 (서비스 로직에 따라 다름)
+    // 현재 서비스는 employeeId가 있으면 본인 체크를 함.
+    // ADMIN 권한이면 employeeId를 undefined로 넘겨야 함.
+    const checkEmployeeId = user.role === 'ADMIN' ? undefined : user.employeeId;
+
+    await reservationService.deleteReservation(id, checkEmployeeId, actorId, scope);
     res.status(204).send();
   } catch (error) {
     let statusCode = 500;

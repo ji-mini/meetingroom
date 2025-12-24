@@ -1,5 +1,5 @@
 import { format, differenceInMinutes } from 'date-fns';
-import { Plus, Trash2, X } from 'lucide-react';
+import { Plus, Trash2, X, Repeat } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { cn } from '@/lib/utils';
@@ -276,10 +276,13 @@ function ScheduleTimeline({
                                 }
                               }}
                             >
-                              <div className="flex-1 min-w-0">
+                              <div className="flex-1 min-w-0 flex items-center gap-1">
                                 <p className="font-semibold truncate">
                                   {reservation.user?.name || '예약자 없음'}
                                 </p>
+                                {reservation.recurringId && (
+                                  <Repeat className="w-3 h-3 text-white/80 shrink-0" />
+                                )}
                               </div>
                             </div>
                           ))

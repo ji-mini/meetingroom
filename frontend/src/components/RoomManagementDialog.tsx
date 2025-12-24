@@ -204,7 +204,7 @@ function RoomManagementDialog({ open, onOpenChange, isAdmin, onSuccess }: RoomMa
               <div className="space-y-2">
                 {/* 테이블 헤더 */}
                 <div className="grid grid-cols-12 gap-4 p-3 bg-slate-50 rounded-md font-medium text-sm text-slate-700">
-                  <div className="col-span-2">이름</div>
+                  <div className="col-span-3">이름</div>
                   <div className="col-span-1">건물</div>
                   <div className="col-span-1">층</div>
                   <div className="col-span-1 text-center">수용 인원</div>
@@ -212,14 +212,14 @@ function RoomManagementDialog({ open, onOpenChange, isAdmin, onSuccess }: RoomMa
                   <div className="col-span-1 text-center">빔프로젝터</div>
                   <div className="col-span-1 text-center">상태</div>
                   <div className="col-span-1">생성일</div>
-                  <div className="col-span-3 text-right">작업</div>
+                  <div className="col-span-2 text-right">작업</div>
                 </div>
 
                 {/* 테이블 행 */}
                 {filteredRooms.map((room) => (
                   <Card key={room.id} className="p-3">
                     <div className="grid grid-cols-12 gap-4 items-center">
-                      <div className="col-span-2 font-medium">{room.name}</div>
+                      <div className="col-span-3 font-medium">{room.name}</div>
                       <div className="col-span-1 text-sm text-muted-foreground">
                         {room.building}
                       </div>
@@ -257,7 +257,7 @@ function RoomManagementDialog({ open, onOpenChange, isAdmin, onSuccess }: RoomMa
                       <div className="col-span-1 text-sm text-muted-foreground truncate" title={format(new Date(room.createdAt), 'yyyy-MM-dd')}>
                         {format(new Date(room.createdAt), 'yyyy-MM-dd')}
                       </div>
-                      <div className="col-span-3 flex items-center justify-end gap-2">
+                      <div className="col-span-2 flex items-center justify-end gap-2">
                         <Button
                           variant={room.status === 'ACTIVE' ? 'destructive' : 'default'}
                           size="sm"

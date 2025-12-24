@@ -22,6 +22,7 @@ export interface Reservation {
   updatedAt: string;
   user?: MeResponse; // join된 유저 정보
   room?: MeetingRoom; // join된 룸 정보
+  recurringId?: string | null; // 정기예약 ID
 }
 
 export interface MeResponse {
@@ -29,7 +30,7 @@ export interface MeResponse {
   employeeId: string;
   name: string;
   email: string;
-  dept?: string;
+  // dept?: string; // removed
   departmentName?: string;
   role: 'USER' | 'ADMIN';
 }

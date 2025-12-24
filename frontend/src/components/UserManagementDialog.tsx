@@ -48,8 +48,7 @@ const UserManagementDialog = ({ open, onOpenChange }: UserManagementDialogProps)
         (user) =>
           user.name.toLowerCase().includes(query) ||
           user.employeeId.toLowerCase().includes(query) ||
-          (user.departmentName && user.departmentName.toLowerCase().includes(query)) ||
-          (user.dept && user.dept.toLowerCase().includes(query))
+          (user.departmentName && user.departmentName.toLowerCase().includes(query))
       );
   }, [users, searchQuery]);
 
@@ -105,8 +104,8 @@ const UserManagementDialog = ({ open, onOpenChange }: UserManagementDialogProps)
                     <div className="grid grid-cols-12 gap-4 items-center text-sm">
                       <div className="col-span-2 font-medium">{user.name}</div>
                       <div className="col-span-2 text-gray-600">{user.employeeId}</div>
-                      <div className="col-span-2 text-gray-600 truncate" title={user.departmentName || user.dept || ''}>
-                        {user.departmentName || user.dept || '-'}
+                      <div className="col-span-2 text-gray-600 truncate" title={user.departmentName || ''}>
+                        {user.departmentName || '-'}
                       </div>
                       <div className="col-span-3 text-gray-600 truncate" title={user.email || ''}>
                         {user.email || '-'}

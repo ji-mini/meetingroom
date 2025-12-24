@@ -8,47 +8,71 @@ import type { SSOUserInfo } from '../types/user.js';
 export async function findOrCreateUser(userInfo: SSOUserInfo) {
   const { employeeId, name, email, dept, company } = userInfo;
 
-  // 부서명이 있다면 Departments 테이블 확인 및 생성 (Optional)
-  // 현재 MVP에서는 deptId를 필수는 아니지만, 추후 확장을 위해
-  // Departments 테이블에 해당 부서가 없으면 생성하고, User.deptId를 연결하는 것이 좋음.
-  // 다만 현재 dept 코드가 아닌 dept 이름만 넘어오므로, dept 이름 자체를 id로 사용할 수도 있고
-  // UUID를 사용할 수도 있음. 
-  // 여기서는 스키마에 정의된 대로 Department 테이블을 활용한다고 가정.
-  // 만약 Department 테이블이 단순히 { id: string, name: string } 이고 id가 부서 코드라면
-  // SSO에서 부서 코드를 받아와야 함.
-  // SSOUserInfo에 deptId가 없으므로 일단 dept 이름으로 Department 조회/생성 시도 (id=name으로 가정하거나 별도 로직 필요)
-  
-  // 여기서는 기존 로직 유지하되, department relation만 include 해서 반환하도록 수정
-  // (Department 테이블 데이터 채우는 로직은 별도로 필요하거나, 여기서 upsert 해야 함)
+  // 부서 처리: Department 테이블에 부서 정보 upsert
+  let deptId: string | null = null;
+  if (dept) {
+    try {
+      // 1. 이름으로 부서 조회
+      let department = await prisma.department.findFirst({
+        where: { name: dept },
+      });
 
-  // 1. Department 테이블에 부서 정보가 있다면 연결, 없다면... 일단 넘어감 (또는 이름으로 생성)
-  // MVP 스펙상 복잡도를 낮추기 위해 기존 문자열 dept 컬럼 우선 사용 + department relation include
-  
+      // 2. 없으면 생성 (ID는 랜덤 UUID 또는 규칙에 따라 생성, 여기선 UUID)
+      if (!department) {
+        // 부서 생성 시 ID가 필요함. Department 모델 정의에 따라 다름.
+        // 현재 Department ID는 String @id (수동 입력 필요)로 보임.
+        // 임시로 랜덤 UUID나 부서명을 ID로 사용.
+        // 만약 ID 규칙이 있다면 그에 따라야 함.
+        // 여기서는 부서명을 ID로 사용하는 것이 간단할 수 있으나, 중복 방지를 위해 UUID 생성
+        // 하지만 Department 모델에 default(uuid())가 없다면 직접 만들어야 함.
+        // 스키마 확인 결과: model Department { id String @id ... } 
+        // ID 생성 전략이 없으므로 UUID 생성 또는 부서명을 ID로 사용.
+        // 부서명을 ID로 사용하면 읽기 쉽지만 변경 시 문제됨. UUID 사용 권장.
+        // crypto.randomUUID() 사용 (Node 19+) 또는 uuid 라이브러리 사용
+        // 여기서는 간단히 부서명을 ID로 사용하고 prefix 붙임 (임시) -> 아니면 uuid import
+        // uuid 라이브러리가 있는지 확인 필요. 없으면 간단 생성 함수 사용.
+        
+        // 기존 코드에서 dept 자체를 deptId에 넣으려 했던 것으로 보아
+        // '부서명' 자체를 ID로 쓰려 했을 수 있음.
+        // 가장 안전한 방법: 부서명을 ID로 사용 (한글 포함 가능)
+        // 하지만 PK는 영어/숫자가 좋음.
+        
+        // 여기서는 랜덤 ID 생성 함수 사용
+        const newDeptId = `DEPT_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+        
+        department = await prisma.department.create({
+          data: {
+            id: newDeptId,
+            name: dept,
+            companyName: company,
+          },
+        });
+      }
+      
+      deptId = department.id;
+    } catch (error) {
+      console.warn('부서 정보 처리 중 오류 발생:', error);
+      // 부서 처리 실패해도 사용자 로그인은 진행되어야 함
+    }
+  }
+
   // employeeId로 기존 사용자 조회
   const existingUser = await prisma.user.findUnique({
     where: { employeeId },
   });
 
   if (existingUser) {
-    // 존재하면 이름/부서/계열사 업데이트
-    // 개발 모드에서 홍길동(E123456)은 항상 ADMIN 권한으로 업데이트
-    const updateData: {
-      name: string;
-      email: string | null;
-      deptId: string | null; // dept -> deptId로 변경
-      dept: string | null;
-      company: string | null;
-      role?: 'ADMIN' | 'USER';
-    } = {
+    const updateData: any = {
       name,
       email: email || null,
-      deptId: dept || null, // dept 값을 deptId에 저장
-      dept: dept || null, // 하위 호환성을 위해 dept 필드에도 저장 (deprecated)
       company: company || null,
     };
 
-    // 개발 모드에서 홍길동은 항상 ADMIN 권한으로 업데이트
-    // NODE_ENV가 설정되지 않았거나 'production'이 아니면 개발 모드로 간주
+    if (deptId) {
+        updateData.deptId = deptId;
+    }
+
+    // 개발 모드에서 홍길동(E123456)은 항상 ADMIN 권한으로 업데이트
     const isDev = !process.env.NODE_ENV || process.env.NODE_ENV !== 'production';
     if (isDev && employeeId === 'E123456') {
       updateData.role = 'ADMIN';
@@ -64,8 +88,6 @@ export async function findOrCreateUser(userInfo: SSOUserInfo) {
   }
 
   // 없으면 새로 생성
-  // 개발 모드에서 홍길동(E123456)은 기본적으로 ADMIN 권한 부여
-  // NODE_ENV가 설정되지 않았거나 'production'이 아니면 개발 모드로 간주
   const isDev = !process.env.NODE_ENV || process.env.NODE_ENV !== 'production';
   const defaultRole = isDev && employeeId === 'E123456' ? 'ADMIN' : 'USER';
 
@@ -74,8 +96,7 @@ export async function findOrCreateUser(userInfo: SSOUserInfo) {
       employeeId,
       name,
       email: email || null,
-      deptId: dept || null, // dept 값을 deptId에 저장 (FK 연결)
-      dept: dept || null,   // 하위 호환성을 위해 dept 필드에도 저장
+      deptId: deptId,
       company: company || null,
       role: defaultRole,
     },
@@ -128,7 +149,7 @@ export async function getAllUsers() {
       employeeId: user.employeeId,
       name: user.name,
       email: user.email,
-      dept: user.deptId || user.dept, // deptId 우선 사용
+      dept: null, // deprecated field removed
       departmentName: user.department?.name || null, // 조인된 부서명 사용
       company: user.company,
       role: user.role,

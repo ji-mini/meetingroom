@@ -14,6 +14,7 @@ import {
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { Switch } from './ui/switch';
 import {
   Select,
   SelectContent,
@@ -61,9 +62,14 @@ function ReservationModal({
     startTime: '08:00',
     endDate: selectedDate,
     endTime: '08:30',
+    isRecurring: false,
+    recurringEndDate: selectedDate,
+    skipConflicts: false,
   });
   const [error, setError] = useState<string>('');
+  const [conflicts, setConflicts] = useState<Array<{ date: string; reason: string }>>([]);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [recurringEndDatePickerOpen, setRecurringEndDatePickerOpen] = useState(false);
 
   // 모달이 열릴 때 초기값 설정
   useEffect(() => {
@@ -75,9 +81,14 @@ function ReservationModal({
         startTime: '08:00',
         endDate: selectedDate,
         endTime: '08:30',
+        isRecurring: false,
+        recurringEndDate: selectedDate,
+        skipConflicts: false,
       });
       setError('');
+      setConflicts([]);
       setDatePickerOpen(false);
+      setRecurringEndDatePickerOpen(false);
     }
   }, [open, initialRoomId, selectedDate]);
 
@@ -92,18 +103,34 @@ function ReservationModal({
         onSuccess();
       }
     },
-    onError: (err: AxiosError<{ message?: string }>) => {
+    onError: (err: AxiosError<{ message?: string; conflicts?: any[]; code?: string }>) => {
+      const responseData = err.response?.data;
       if (err.response?.status === 409) {
-        setError('해당 시간대에 이미 예약이 있습니다.');
+        if (responseData?.code === 'CONFLICT_RECURRING' && responseData.conflicts) {
+          setConflicts(responseData.conflicts);
+          setError('일부 날짜에 예약 충돌이 있습니다. 아래에서 확인해주세요.');
+        } else {
+          setError('해당 시간대에 이미 예약이 있습니다.');
+        }
       } else {
-        setError(err.response?.data?.message || '예약 생성 중 오류가 발생했습니다.');
+        setError(responseData?.message || '예약 생성 중 오류가 발생했습니다.');
       }
     },
   });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (conflicts.length > 0 && !formData.skipConflicts) {
+      // 충돌이 있는데 skipConflicts가 false이면 사용자가 아직 결정을 안 한 상태 (또는 UI가 꼬임)
+      // 여기서는 그냥 리턴하거나 경고
+      return;
+    }
+    submitReservation(formData.skipConflicts);
+  };
+
+  const submitReservation = (skipConflicts: boolean = false) => {
     setError('');
+    setConflicts([]); // 재시도 시 초기화
 
     const startAt = combineDateTime(formData.startDate, formData.startTime);
     const endAt = combineDateTime(formData.endDate, formData.endTime);
@@ -114,7 +141,6 @@ function ReservationModal({
     }
 
     // 점심시간(11:30 ~ 12:30) 체크
-    // 11:00-11:30 예약은 가능, 11:30-12:30 예약은 불가, 13:00 이후 예약 가능
     const start = new Date(startAt);
     const end = new Date(endAt);
     const lunchStart = new Date(start);
@@ -122,21 +148,27 @@ function ReservationModal({
     const lunchEnd = new Date(start);
     lunchEnd.setHours(12, 30, 0, 0);
     
-    // 예약이 점심시간과 겹치는지 확인
-    // 시작 시간이 점심시간 이전이고 종료 시간이 점심시간 이후인 경우
     if (start < lunchEnd && end > lunchStart) {
       setError('점심시간(11:30 ~ 12:30)에는 예약할 수 없습니다.');
       return;
     }
 
-    // userId는 서버에서 자동으로 설정되므로 reservedBy는 사용하지 않음
-    createMutation.mutate({
+    const payload: any = {
       roomId: formData.roomId,
       userId: '', // 서버에서 req.user에서 자동 설정
       title: formData.title,
       startAt,
       endAt,
-    });
+    };
+
+    if (formData.isRecurring) {
+      payload.recurring = {
+        endDate: formData.recurringEndDate,
+        skipConflicts,
+      };
+    }
+
+    createMutation.mutate(payload);
   };
 
   const handleChange = (
@@ -162,9 +194,12 @@ function ReservationModal({
     
     setFormData((prev) => {
       const newData = { ...prev, [name]: value };
-      // 시작 날짜가 변경되면 종료 날짜도 동일하게 설정
+      // 시작 날짜가 변경되면 종료 날짜도 동일하게 설정 (정기예약 종료일 포함)
       if (name === 'startDate') {
         newData.endDate = value;
+        if (!newData.isRecurring) {
+            newData.recurringEndDate = value;
+        }
       }
       return newData;
     });
@@ -284,6 +319,17 @@ function ReservationModal({
 
   const activeRooms = rooms.filter((room) => room.status === 'ACTIVE');
 
+  // 공휴일 정보 계산 (Memoization)
+  const holidayModifiers = useMemo(() => {
+    const holidays: Date[] = [];
+    const currentYear = new Date().getFullYear();
+    for (let year = currentYear - 1; year <= currentYear + 1; year++) {
+      const yearHolidays = getHolidaysForYear(year);
+      holidays.push(...yearHolidays.map((h) => h.date));
+    }
+    return { holiday: holidays };
+  }, []);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
@@ -374,20 +420,10 @@ function ReservationModal({
                       if (day === 0 || day === 6) {
                         return true;
                       }
-                      // 공휴일 비활성화
+                        // 공휴일 비활성화
                       return isHoliday(date);
                     }}
-                    modifiers={{
-                      holiday: useMemo(() => {
-                        const holidays: Date[] = [];
-                        const currentYear = new Date().getFullYear();
-                        for (let year = currentYear - 1; year <= currentYear + 1; year++) {
-                          const yearHolidays = getHolidaysForYear(year);
-                          holidays.push(...yearHolidays.map((h) => h.date));
-                        }
-                        return holidays;
-                      }, []),
-                    }}
+                    modifiers={holidayModifiers}
                     modifiersClassNames={{
                       holiday: 'text-red-600 font-semibold',
                     }}
@@ -445,9 +481,128 @@ function ReservationModal({
                 </Select>
               </div>
             </div>
+
+            <div className="flex items-center space-x-2 pt-2">
+              <Switch
+                id="isRecurring"
+                checked={formData.isRecurring}
+                onCheckedChange={(checked) => {
+                    setFormData(prev => ({
+                        ...prev, 
+                        isRecurring: checked,
+                        // 켜질 때 반복 종료일을 시작일로 초기화 (또는 +1주 등으로 설정 가능)
+                        recurringEndDate: checked ? prev.startDate : prev.startDate 
+                    }));
+                    setConflicts([]);
+                    setError('');
+                }}
+              />
+              <Label htmlFor="isRecurring" className="cursor-pointer">정기예약 (반복)</Label>
+            </div>
+
+            {formData.isRecurring && (
+              <div className="space-y-2 p-4 bg-slate-50 rounded-md border border-slate-100">
+                <div className="space-y-2">
+                  <Label htmlFor="recurringEndDate">반복 종료 날짜 *</Label>
+                  <Popover open={recurringEndDatePickerOpen} onOpenChange={setRecurringEndDatePickerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          'w-full justify-start text-left font-normal',
+                          !formData.recurringEndDate && 'text-muted-foreground'
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formData.recurringEndDate ? (
+                          format(new Date(formData.recurringEndDate), 'yyyy년 MM월 dd일')
+                        ) : (
+                          <span>날짜 선택</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 w-auto" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={formData.recurringEndDate ? new Date(formData.recurringEndDate) : undefined}
+                        onSelect={(date) => {
+                          if (date) {
+                            const dateString = format(date, 'yyyy-MM-dd');
+                            setFormData((prev) => ({
+                              ...prev,
+                              recurringEndDate: dateString,
+                            }));
+                            setRecurringEndDatePickerOpen(false);
+                          }
+                        }}
+                        initialFocus
+                        disabled={(date) => {
+                          // 시작일 이전 날짜 선택 불가
+                          const startDate = new Date(formData.startDate);
+                          startDate.setHours(0, 0, 0, 0);
+                          if (date < startDate) return true;
+
+                          // 주말 및 공휴일 (선택은 가능하게 하되 안내 문구로 처리? 아니면 막기?)
+                          // 요구사항: "정기예약 후보 날짜를 만들 때부터 토/일 및 공휴일은 제외한다."
+                          // 여기서 선택 자체를 막을 필요는 없지만, 막아두면 더 명확함.
+                          const day = date.getDay();
+                          if (day === 0 || day === 6) return true;
+                          return isHoliday(date);
+                        }}
+                        modifiers={holidayModifiers}
+                        modifiersClassNames={{
+                          holiday: 'text-red-600 font-semibold',
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <p className="text-xs text-muted-foreground">
+                    * 주말(토/일)과 공휴일은 자동으로 제외됩니다.<br/>
+                    * 최대 8주 또는 20회까지만 생성됩니다.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
-          {error && <Alert>{error}</Alert>}
+          {error && <Alert variant="destructive">{error}</Alert>}
+
+          {/* 충돌 해결 UI */}
+          {conflicts.length > 0 && (
+            <div className="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800 space-y-3">
+              <div className="font-semibold">다음 날짜에 이미 예약이 있어 생성할 수 없습니다:</div>
+              <ul className="list-disc pl-5 space-y-1 max-h-32 overflow-y-auto">
+                {conflicts.map((c, idx) => (
+                  <li key={idx}>
+                    {c.date} ({c.reason})
+                  </li>
+                ))}
+              </ul>
+              <div className="pt-2 font-medium">어떻게 하시겠습니까?</div>
+              <div className="flex gap-2">
+                <Button 
+                  type="button" 
+                  variant="secondary" 
+                  size="sm"
+                  onClick={() => {
+                    setConflicts([]);
+                    setError('');
+                  }}
+                  className="bg-white hover:bg-slate-100 border border-slate-200 text-slate-900"
+                >
+                  전체 취소
+                </Button>
+                <Button 
+                  type="button" 
+                  size="sm"
+                  onClick={() => submitReservation(true)}
+                  className="bg-red-600 hover:bg-red-700 text-white border-transparent"
+                >
+                  겹치는 날짜 건너뛰고 예약
+                </Button>
+              </div>
+            </div>
+          )}
 
           <DialogFooter className="pt-2">
             <DialogClose asChild>
@@ -455,9 +610,11 @@ function ReservationModal({
                 취소
               </Button>
             </DialogClose>
-            <Button type="submit" disabled={createMutation.isPending}>
-              {createMutation.isPending ? '등록 중...' : '등록'}
-            </Button>
+            {conflicts.length === 0 && (
+              <Button type="submit" disabled={createMutation.isPending}>
+                {createMutation.isPending ? '등록 중...' : '등록'}
+              </Button>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>

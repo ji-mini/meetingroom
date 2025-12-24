@@ -5,7 +5,7 @@ export type User = {
   employeeId: string;
   name: string;
   email: string | null;
-  dept: string | null;
+  departmentName?: string | null;
   role: 'ADMIN' | 'USER';
   createdAt: string;
   updatedAt: string;

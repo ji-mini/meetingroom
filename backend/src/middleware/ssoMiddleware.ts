@@ -37,12 +37,12 @@ async function getDevUser(): Promise<AuthenticatedUser | null> {
     const user = await getUserByEmployeeId(env.DEV_USER_EMPLOYEE_ID);
     console.log('[DEV] DB 조회 완료');
     if (user) {
-      const authUser = {
+        const authUser = {
         id: user.id,
         employeeId: user.employeeId,
         name: user.name,
         email: user.email,
-        dept: user.dept,
+        // dept: user.dept, // removed
         company: user.company,
         role: user.role,
         department: user.department, // department 객체 추가
@@ -75,7 +75,7 @@ async function getDevUser(): Promise<AuthenticatedUser | null> {
       employeeId: firstAdmin.employeeId,
       name: firstAdmin.name,
       email: firstAdmin.email,
-      dept: firstAdmin.dept,
+      // dept: firstAdmin.dept, // removed
       company: firstAdmin.company,
       role: firstAdmin.role,
       department: firstAdmin.department, // department 객체 추가
@@ -102,7 +102,7 @@ async function getDevUser(): Promise<AuthenticatedUser | null> {
       employeeId: firstUser.employeeId,
       name: firstUser.name,
       email: firstUser.email,
-      dept: firstUser.dept,
+      // dept: firstUser.dept, // removed
       company: firstUser.company,
       role: firstUser.role,
       department: firstUser.department, // department 객체 추가
@@ -143,7 +143,7 @@ async function getProdUser(userInfo: SSOUserInfo): Promise<AuthenticatedUser> {
     employeeId: user.employeeId,
     name: user.name,
     email: user.email,
-    dept: user.dept,
+    // dept: user.dept, // removed
     company: user.company,
     role: user.role,
     department: (user as any).department, // department 객체 추가 (user.service.ts의 findOrCreateUser는 include: {department:true}를 반환함)

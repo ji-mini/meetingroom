@@ -51,7 +51,7 @@ const UserHeader = ({
                       </span>
                     )}
                   </div>
-                  <span className="text-xs text-gray-500">{user?.departmentName || user?.dept || '부서미정'}</span>
+                  <span className="text-xs text-gray-500">{user?.departmentName || '부서미정'}</span>
                 </div>
               </div>
               

@@ -54,11 +54,14 @@ function App() {
         user?.employeeId && 
         reservation.user?.employeeId === user.employeeId;
 
-      // 우리 팀 예약 체크 (deptId 끼리 비교)
+      // 우리 팀 예약 체크 (deptId 끼리 비교 - 현재는 dept가 없으므로 departmentName으로 비교하거나 deptId가 필요함)
+      // MeResponse에 deptId가 없으므로 departmentName으로 비교 (임시)
+      // 정확한 비교를 위해서는 MeResponse에 deptId를 추가해야 함.
+      // 하지만 여기서는 departmentName으로 충분할 수 있음.
       const isTeamReservation = showTeamReservations && 
-        user?.dept && 
-        reservation.user?.dept && 
-        user.dept === reservation.user.dept;
+        user?.departmentName && 
+        reservation.user?.departmentName && 
+        user.departmentName === reservation.user.departmentName;
 
       // 둘 중 하나라도 조건에 맞으면 표시
       return isMyReservation || isTeamReservation;

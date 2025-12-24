@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { Repeat } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -52,7 +53,15 @@ function ReservationDetailDialog({
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <p className="text-sm font-medium text-slate-500">예약 제목</p>
-            <p className="text-base font-semibold text-slate-900">{reservation.title}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-base font-semibold text-slate-900">{reservation.title}</p>
+              {reservation.recurringId && (
+                <span className="flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-100">
+                  <Repeat className="w-3 h-3" />
+                  정기예약
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">

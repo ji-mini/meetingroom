@@ -20,7 +20,7 @@ export interface AuthenticatedUser {
   employeeId: string;
   name: string;
   email: string | null;
-  dept: string | null;
+  // dept: string | null; // Removed
   company: string | null;
   role: 'USER' | 'ADMIN';
   department?: Department | null; // 조인된 부서 정보

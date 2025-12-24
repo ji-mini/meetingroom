@@ -96,7 +96,7 @@ export default function DayDetailPanel({
                   </div>
                   <div className="flex justify-between items-center text-xs mt-3 pt-3 border-t border-slate-100">
                     <span className="text-slate-500">예약자: <span className="font-medium text-slate-700">{reservation.user?.name || '알 수 없음'}</span></span>
-                    <span className="text-slate-400">{reservation.user?.departmentName || reservation.user?.dept || ''}</span>
+                    <span className="text-slate-400">{reservation.user?.departmentName || ''}</span>
                   </div>
                 </Card>
               ))

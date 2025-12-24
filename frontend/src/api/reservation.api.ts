@@ -37,8 +37,8 @@ export const reservationApi = {
   /**
    * 예약 삭제
    */
-  deleteReservation: async (id: string): Promise<void> => {
-    await apiClient.delete(`/reservations/${id}`);
+  deleteReservation: async (id: string, scope?: 'this' | 'all'): Promise<void> => {
+    await apiClient.delete(`/reservations/${id}`, { params: { scope } });
   },
 };
 

@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
+import { Repeat } from 'lucide-react';
 import type { MeetingRoom, Reservation } from '@/types';
 import { formatTimeRange } from '@/utils/date';
 
@@ -49,7 +50,12 @@ function RoomCard({ room, reservations, onAddReservation }: RoomCardProps) {
                 <span className="font-medium">
                   {formatTimeRange(reservation.startAt, reservation.endAt)}
                 </span>
-                <span className="ml-2">{reservation.title}</span>
+                <span className="ml-2 flex items-center gap-1">
+                  {reservation.title}
+                  {reservation.recurringId && (
+                    <Repeat className="w-3 h-3 text-muted-foreground" aria-label="정기예약" />
+                  )}
+                </span>
               </div>
             ))
           )}
