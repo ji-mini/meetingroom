@@ -178,10 +178,14 @@ export async function createReservation(data: CreateReservationDto) {
   // 정기예약 처리
   if (data.recurring) {
     const recurringEndDate = parseLocalDateTime(data.recurring.endDate + 'T23:59:59'); // 날짜의 끝
+    const repeatType = data.recurring.repeatType || 'DAILY';
     
-    // 1. 기간 제한 체크 (최대 8주)
-    if (diffDays(startAt, recurringEndDate) > 56) {
-      throw new Error('정기예약은 최대 8주까지만 등록할 수 있습니다.');
+    // 1. 기간 제한 체크 (최대 8주, 매주는 4주)
+    const maxWeeks = repeatType === 'WEEKLY' ? 4 : 8;
+    const maxDays = maxWeeks * 7;
+    
+    if (diffDays(startAt, recurringEndDate) > maxDays) {
+      throw new Error(`정기예약(${repeatType === 'WEEKLY' ? '매주' : '매일'})은 최대 ${maxWeeks}주까지만 등록할 수 있습니다.`);
     }
 
     const instances: { start: Date; end: Date }[] = [];
@@ -191,6 +195,7 @@ export async function createReservation(data: CreateReservationDto) {
     let currentDate = new Date(startAt);
     // 시간 부분 유지
     const duration = endAt.getTime() - startAt.getTime();
+    const incrementDays = repeatType === 'WEEKLY' ? 7 : 1;
 
     // currentDate가 startAt(첫 예약일)부터 시작
     // recurringEndDate까지 반복
@@ -198,13 +203,13 @@ export async function createReservation(data: CreateReservationDto) {
       // 주말 체크 (0: 일, 6: 토)
       const day = currentDate.getDay();
       if (day === 0 || day === 6) {
-        currentDate = addDays(currentDate, 1);
+        currentDate = addDays(currentDate, incrementDays);
         continue;
       }
 
       // 공휴일 체크
       if (isHoliday(currentDate)) {
-        currentDate = addDays(currentDate, 1);
+        currentDate = addDays(currentDate, incrementDays);
         continue;
       }
 
@@ -223,16 +228,12 @@ export async function createReservation(data: CreateReservationDto) {
         instances.push({ start: instanceStart, end: instanceEnd });
       }
 
-      // 개수 제한 체크 (최대 20개) -> 충돌 포함해서 체크해야 하나? 
-      // 요구사항: "최대 생성 횟수: 20개". 생성하려는 것이 20개 넘으면 안됨.
-      // 충돌난 것은 생성되지 않으므로 instances 개수로 체크하는게 맞음.
-      // 하지만 "사용자 입력 단계에서 선제적으로 막고"라고 했으니, 전체 시도 횟수가 20개 넘으면 안될 수도.
-      // 여기서는 "생성될 예정인 개수"가 20개를 넘으면 에러로 처리.
+      // 개수 제한 체크 (최대 20개)
       if (instances.length > 20) {
         throw new Error('정기예약은 최대 20회까지만 등록할 수 있습니다.');
       }
 
-      currentDate = addDays(currentDate, 1);
+      currentDate = addDays(currentDate, incrementDays);
     }
 
     if (instances.length === 0 && conflicts.length === 0) {
@@ -273,7 +274,7 @@ export async function createReservation(data: CreateReservationDto) {
           title: data.title,
           startDate: startAt,
           endDate: recurringEndDate,
-          weekDays: '1,2,3,4,5', // 주말 제외 매일
+          weekDays: repeatType === 'WEEKLY' ? String(startAt.getDay()) : '1,2,3,4,5', // 주말 제외 매일 or 해당 요일
         },
       });
 

@@ -43,6 +43,11 @@ export interface CreateReservationDto {
   title: string;
   startAt: string;
   endAt: string;
+  recurring?: {
+    endDate: string;
+    repeatType?: 'DAILY' | 'WEEKLY';
+    skipConflicts?: boolean;
+  };
 }
 
 export interface UpdateReservationDto {

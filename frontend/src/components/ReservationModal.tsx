@@ -65,6 +65,7 @@ function ReservationModal({
     isRecurring: false,
     recurringEndDate: selectedDate,
     skipConflicts: false,
+    repeatType: 'DAILY' as 'DAILY' | 'WEEKLY',
   });
   const [error, setError] = useState<string>('');
   const [conflicts, setConflicts] = useState<Array<{ date: string; reason: string }>>([]);
@@ -84,6 +85,7 @@ function ReservationModal({
         isRecurring: false,
         recurringEndDate: selectedDate,
         skipConflicts: false,
+        repeatType: 'DAILY',
       });
       setError('');
       setConflicts([]);
@@ -164,6 +166,7 @@ function ReservationModal({
     if (formData.isRecurring) {
       payload.recurring = {
         endDate: formData.recurringEndDate,
+        repeatType: formData.repeatType,
         skipConflicts,
       };
     }
@@ -503,6 +506,24 @@ function ReservationModal({
             {formData.isRecurring && (
               <div className="space-y-2 p-4 bg-slate-50 rounded-md border border-slate-100">
                 <div className="space-y-2">
+                  <Label>반복 유형</Label>
+                  <Select
+                    value={formData.repeatType}
+                    onValueChange={(value: 'DAILY' | 'WEEKLY') =>
+                      setFormData((prev) => ({ ...prev, repeatType: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="DAILY">매일 (주말 제외)</SelectItem>
+                      <SelectItem value="WEEKLY">매주 (같은 요일)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="recurringEndDate">반복 종료 날짜 *</Label>
                   <Popover open={recurringEndDatePickerOpen} onOpenChange={setRecurringEndDatePickerOpen}>
                     <PopoverTrigger asChild>
@@ -558,7 +579,7 @@ function ReservationModal({
                   </Popover>
                   <p className="text-xs text-muted-foreground">
                     * 주말(토/일)과 공휴일은 자동으로 제외됩니다.<br/>
-                    * 최대 8주 또는 20회까지만 생성됩니다.
+                    * {formData.repeatType === 'DAILY' ? '최대 8주' : '최대 4주'} 또는 20회까지만 생성됩니다.
                   </p>
                 </div>
               </div>

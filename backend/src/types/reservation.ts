@@ -9,6 +9,7 @@ export interface CreateReservationDto {
     endDate: string; // 반복 종료일 (YYYY-MM-DD)
     weekDays?: string; // "0,1,2,3,4,5,6" (Optional, default: 매일)
     skipConflicts?: boolean; // 충돌 시 건너뛰기 여부
+    repeatType?: 'DAILY' | 'WEEKLY'; // 반복 유형 (매일/매주)
   };
 }
 
