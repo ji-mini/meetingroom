@@ -24,6 +24,8 @@ export async function getRooms() {
 export async function getAllRooms() {
   return await prisma.meetingRoom.findMany({
     orderBy: [
+      { building: 'asc' },
+      { floor: 'asc' },
       { name: 'asc' },
     ],
   });

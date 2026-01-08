@@ -36,8 +36,7 @@ function checkBusinessHours(startAt: Date, endAt: Date): void {
   if (startTotal < opStart || endTotal > opEnd) {
     throw new Error('예약 가능한 시간은 08:00 ~ 18:00 입니다.');
   }
-
-  return true; // 통과
+  // 통과 (예외를 던지지 않으면 OK)
 }
 
 /**
@@ -91,7 +90,7 @@ function parseLocalDateTime(dateTimeString: string): Date {
     return new Date(dateTimeString);
   }
   const [year, month, day] = datePart.split('-').map(Number);
-  const [hours, minutes, seconds = '0'] = timePart.split(':').map(Number);
+  const [hours, minutes, seconds = 0] = timePart.split(':').map(Number);
   // Date.UTC를 사용하여 타임존 변환 없이 입력된 시간 그대로를 UTC로 취급 (DB의 timestamp 타입과 일치시키기 위함)
   return new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds || 0, 0));
 }
@@ -116,7 +115,8 @@ function mapReservation(reservation: any) {
     endAt,
     user: reservation.user ? {
       ...reservation.user,
-      dept: reservation.user.deptId || reservation.user.dept, // dept는 ID로 반환
+      deptId: reservation.user.deptId || null,
+      company: reservation.user.department?.companyName || null,
       departmentName: reservation.user.department?.name || null // 부서명 추가
     } : null
   };

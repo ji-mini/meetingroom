@@ -28,6 +28,11 @@ type RoomManagementDialogProps = {
 
 type FilterType = 'all' | 'ACTIVE' | 'CLOSED';
 
+const collator = new Intl.Collator('ko-KR', {
+  numeric: true,
+  sensitivity: 'base',
+});
+
 function RoomManagementDialog({ open, onOpenChange, isAdmin, onSuccess }: RoomManagementDialogProps) {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<FilterType>('all');
@@ -70,6 +75,19 @@ function RoomManagementDialog({ open, onOpenChange, isAdmin, onSuccess }: RoomMa
 
     return result;
   }, [rooms, filter, searchQuery]);
+
+  // 정렬: building → floor → name (자연 정렬, 숫자 포함)
+  const sortedRooms = useMemo(() => {
+    return [...filteredRooms].sort((a, b) => {
+      const byBuilding = collator.compare(a.building, b.building);
+      if (byBuilding !== 0) return byBuilding;
+
+      const byFloor = collator.compare(a.floor, b.floor);
+      if (byFloor !== 0) return byFloor;
+
+      return collator.compare(a.name, b.name);
+    });
+  }, [filteredRooms]);
 
   // 활성/비활성 토글
   const toggleStatusMutation = useMutation({
@@ -196,7 +214,7 @@ function RoomManagementDialog({ open, onOpenChange, isAdmin, onSuccess }: RoomMa
             {/* 회의실 목록 */}
             {isLoading ? (
               <div className="text-center py-8">로딩 중...</div>
-            ) : filteredRooms.length === 0 ? (
+            ) : sortedRooms.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 {searchQuery ? '검색 결과가 없습니다.' : '등록된 회의실이 없습니다.'}
               </div>
@@ -216,7 +234,7 @@ function RoomManagementDialog({ open, onOpenChange, isAdmin, onSuccess }: RoomMa
                 </div>
 
                 {/* 테이블 행 */}
-                {filteredRooms.map((room) => (
+                {sortedRooms.map((room) => (
                   <Card key={room.id} className="p-3">
                     <div className="grid grid-cols-12 gap-4 items-center">
                       <div className="col-span-3 font-medium">{room.name}</div>

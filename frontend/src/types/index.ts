@@ -31,6 +31,7 @@ export interface MeResponse {
   name: string;
   email: string;
   // dept?: string; // removed
+  deptId?: string | null;
   departmentName?: string;
   role: 'USER' | 'ADMIN';
 }

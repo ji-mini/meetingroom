@@ -47,6 +47,12 @@ export async function findOrCreateUser(userInfo: SSOUserInfo) {
             companyName: company,
           },
         });
+      } else if (company && department.companyName !== company) {
+        // 같은 부서명이지만 회사명이 갱신된 경우 업데이트
+        department = await prisma.department.update({
+          where: { id: department.id },
+          data: { companyName: company },
+        });
       }
       
       deptId = department.id;
@@ -65,7 +71,6 @@ export async function findOrCreateUser(userInfo: SSOUserInfo) {
     const updateData: any = {
       name,
       email: email || null,
-      company: company || null,
     };
 
     if (deptId) {
@@ -97,7 +102,6 @@ export async function findOrCreateUser(userInfo: SSOUserInfo) {
       name,
       email: email || null,
       deptId: deptId,
-      company: company || null,
       role: defaultRole,
     },
     include: {
@@ -151,7 +155,7 @@ export async function getAllUsers() {
       email: user.email,
       dept: null, // deprecated field removed
       departmentName: user.department?.name || null, // 조인된 부서명 사용
-      company: user.company,
+      company: user.department?.companyName || null,
       role: user.role,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,

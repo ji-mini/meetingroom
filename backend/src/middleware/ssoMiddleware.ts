@@ -42,10 +42,10 @@ async function getDevUser(): Promise<AuthenticatedUser | null> {
         employeeId: user.employeeId,
         name: user.name,
         email: user.email,
-        // dept: user.dept, // removed
-        company: user.company,
+        deptId: (user as any).deptId ?? (user as any).department?.id ?? null,
+        company: (user as any).department?.companyName ?? null,
         role: user.role,
-        department: user.department, // department 객체 추가
+        department: (user as any).department, // department 객체 추가 (include 여부에 따라 있을 수도/없을 수도)
       } as AuthenticatedUser;
       
       devUserCache = { user: authUser, errorLogged: false };
@@ -75,8 +75,8 @@ async function getDevUser(): Promise<AuthenticatedUser | null> {
       employeeId: firstAdmin.employeeId,
       name: firstAdmin.name,
       email: firstAdmin.email,
-      // dept: firstAdmin.dept, // removed
-      company: firstAdmin.company,
+      deptId: (firstAdmin as any).deptId ?? firstAdmin.department?.id ?? null,
+      company: firstAdmin.department?.companyName ?? null,
       role: firstAdmin.role,
       department: firstAdmin.department, // department 객체 추가
     } as AuthenticatedUser;
@@ -102,8 +102,8 @@ async function getDevUser(): Promise<AuthenticatedUser | null> {
       employeeId: firstUser.employeeId,
       name: firstUser.name,
       email: firstUser.email,
-      // dept: firstUser.dept, // removed
-      company: firstUser.company,
+      deptId: (firstUser as any).deptId ?? firstUser.department?.id ?? null,
+      company: firstUser.department?.companyName ?? null,
       role: firstUser.role,
       department: firstUser.department, // department 객체 추가
     } as AuthenticatedUser;
@@ -143,8 +143,8 @@ async function getProdUser(userInfo: SSOUserInfo): Promise<AuthenticatedUser> {
     employeeId: user.employeeId,
     name: user.name,
     email: user.email,
-    // dept: user.dept, // removed
-    company: user.company,
+    deptId: (user as any).deptId ?? (user as any).department?.id ?? null,
+    company: (user as any).department?.companyName ?? null,
     role: user.role,
     department: (user as any).department, // department 객체 추가 (user.service.ts의 findOrCreateUser는 include: {department:true}를 반환함)
   } as AuthenticatedUser;

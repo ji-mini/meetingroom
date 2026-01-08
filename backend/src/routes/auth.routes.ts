@@ -21,15 +21,17 @@ router.get('/me', (req: Request, res: Response) => {
   }
 
   // user 객체에 department 정보가 join 되어 있다고 가정
-  const departmentName = (user as any).department?.name || null;
+  const department = (user as any).department as { name?: string; companyName?: string } | undefined;
+  const departmentName = department?.name || null;
+  const company = department?.companyName || null;
 
   res.json({
     employeeId: user.employeeId,
     name: user.name,
     email: user.email || null,
-    dept: user.dept || null, // 원래대로 user.dept(부서ID) 반환
+    deptId: user.deptId || null,
     departmentName: departmentName, // 부서명 별도 필드로 반환
-    company: user.company || null,
+    company,
     role: user.role,
   });
 });
