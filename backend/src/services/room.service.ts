@@ -184,3 +184,4 @@ export async function toggleRoomStatus(id: string, actorId?: string) {
   await logAction('UPDATE', 'MEETING_ROOM', id, { status: newStatus }, actorId);
   return updated;
 }
+
