@@ -42,6 +42,19 @@ function App() {
 
   const formattedDate = format(selectedDate, 'yyyy-MM-dd');
 
+  /**
+   * 로컬/개발 환경에서는 SSO 로그인 페이지로 리다이렉트하지 않고,
+   * 백엔드의 개발용 자동 로그인(첫 ADMIN/첫 사용자 등)을 사용합니다.
+   *
+   * - import.meta.env.DEV: vite dev 서버
+   * - VITE_API_BASE_URL이 비어있으면: Vite 프록시(/api) 사용하는 로컬 개발 셋업
+   */
+  const shouldBypassSso = useMemo(() => {
+    const envApiBaseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '';
+    const usesLocalProxy = envApiBaseUrl.trim() === '';
+    return Boolean(import.meta.env.DEV || import.meta.env.MODE === 'development' || usesLocalProxy);
+  }, []);
+
   // 예약 필터링 (내 예약, 우리 팀 예약)
   const filteredReservations = useMemo(() => {
     if (!showMyReservations && !showTeamReservations) {
@@ -138,7 +151,7 @@ function App() {
     
     // 개발 모드에서는 SSO 로그인 후 리다이렉트 시 항상 로그인 상태 확인
     // (백엔드가 자동으로 첫 번째 ADMIN 계정으로 로그인 처리)
-    const isDev = import.meta.env.DEV || import.meta.env.MODE === 'development';
+    const isDev = shouldBypassSso;
     
     if (isDev) {
       // SSO 로그인 후 리다이렉트 확인
@@ -195,7 +208,7 @@ function App() {
   // 로그인 버튼 클릭 핸들러
   const handleLogin = async () => {
     console.log('로그인 버튼 클릭됨');
-    const isDev = import.meta.env.DEV || import.meta.env.MODE === 'development';
+    const isDev = shouldBypassSso;
     
     // 개발 모드에서는 SSO 페이지로 이동하지 않고 바로 로그인 상태 확인 (백엔드 자동 로그인)
     if (isDev) {

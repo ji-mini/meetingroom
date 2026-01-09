@@ -15,6 +15,8 @@ const apiBaseUrl = envApiBaseUrl && envApiBaseUrl.trim() !== ''
 if (import.meta.env.DEV) {
   console.log('🔧 API Base URL:', apiBaseUrl);
   console.log('🔧 VITE_API_BASE_URL:', envApiBaseUrl || '(not set)');
+  console.log('🔧 MODE:', import.meta.env.MODE);
+  console.log('🔧 DEV:', import.meta.env.DEV);
 }
 
 const apiClient = axios.create({
