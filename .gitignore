@@ -40,7 +40,8 @@ lerna-debug.log*
 Thumbs.db
 
 # Prisma
-backend/prisma/migrations/
+# NOTE: Prisma migration 파일은 버전 관리 대상입니다.
+# (마이그레이션 재현/공유를 위해 migrations 디렉토리를 git에 포함)
 
 
 
