@@ -1,7 +1,4 @@
 -- CreateEnum
-CREATE TYPE "RoomStatus" AS ENUM ('ACTIVE', 'CLOSED');
-
--- CreateEnum
 CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'USER');
 
 -- CreateTable
