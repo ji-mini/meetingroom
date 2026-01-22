@@ -1,12 +1,16 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': resolve(__dirname, './src'),
     },
   },
   server: {
@@ -18,10 +22,8 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:3001', // 백엔드 서버 주소
         changeOrigin: true,
-        secure: false,  // 프록시 대상(target)이 HTTPS인 경우, 인증서(SSL) 검증을 하지 않겠다.
+        secure: false, // 프록시 대상(target)이 HTTPS인 경우, 인증서(SSL) 검증을 하지 않겠다.
       },
     },
   },
 });
-
-
