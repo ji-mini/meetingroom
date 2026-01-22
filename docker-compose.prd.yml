@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: meetingroom-db-prd
+    environment:
+      POSTGRES_DB: meetingroom_db
+      POSTGRES_USER: meetingroom
+      POSTGRES_PASSWORD: meetingroom
+    volumes:
+      - meetingroom_db_prd:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meetingroom -d meetingroom_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: meetingroom-backend-prd
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      FRONTEND_BASE_URL: "http://localhost:3000"
+      DATABASE_URL: "postgresql://meetingroom:meetingroom@db:5432/meetingroom_db?schema=public"
+      SSO_SITE_NAME: "37AF0BE78AC74093A77E320F4CA451C4"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -lc "node -v &&
+              npx prisma migrate deploy &&
+              npm run start"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: meetingroom-frontend-prd
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  meetingroom_db_prd:
+

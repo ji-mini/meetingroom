@@ -1,0 +1,70 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: meetingroom-db-dev
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: meetingroom_db
+      POSTGRES_USER: meetingroom
+      POSTGRES_PASSWORD: meetingroom
+    volumes:
+      - meetingroom_db_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meetingroom -d meetingroom_db"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: meetingroom-backend-dev
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      PORT: "3001"
+      FRONTEND_BASE_URL: "http://localhost:3000"
+      # dev DB (docker)
+      DATABASE_URL: "postgresql://meetingroom:meetingroom@db:5432/meetingroom_db?schema=public"
+      # SSO (dev에서는 프론트가 우회하지만, 백엔드도 필요 시 사용)
+      SSO_SITE_NAME: "37AF0BE78AC74093A77E320F4CA451C4"
+      DEV_USER_EMPLOYEE_ID: ""
+    volumes:
+      - ./backend:/app
+      - backend_node_modules_dev:/app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -lc "npm run prisma:generate &&
+              npx prisma migrate deploy &&
+              npm run dev"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: meetingroom-frontend-dev
+    ports:
+      - "3000:3000"
+    environment:
+      # 빈 값이면 frontend가 /api 프록시를 사용
+      VITE_API_BASE_URL: ""
+      # 파일 변경 감지 이슈가 있으면 true로 두면 안정적(특히 Windows/WSL/네트워크 드라이브)
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules_dev:/app/node_modules
+    depends_on:
+      - backend
+    command: >
+      sh -lc "npm run dev -- --host 0.0.0.0 --port 3000"
+
+volumes:
+  meetingroom_db_dev:
+  backend_node_modules_dev:
+  frontend_node_modules_dev:
+
