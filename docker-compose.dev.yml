@@ -1,5 +1,6 @@
 services:
   db:
+    restart: unless-stopped
     image: postgres:16-alpine
     container_name: meetingroom-db-dev
     ports:
@@ -17,6 +18,7 @@ services:
       retries: 20
 
   backend:
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: Dockerfile.dev
@@ -44,6 +46,7 @@ services:
               npm run dev"
 
   frontend:
+    restart: unless-stopped
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
