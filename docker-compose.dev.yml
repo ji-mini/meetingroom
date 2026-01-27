@@ -56,6 +56,8 @@ services:
     environment:
       # 빈 값이면 frontend가 /api 프록시를 사용
       VITE_API_BASE_URL: ""
+      # Docker에서는 프론트 컨테이너 내부에서 백엔드 서비스로 프록시해야 함
+      VITE_PROXY_TARGET: "http://backend:3001"
       # 파일 변경 감지 이슈가 있으면 true로 두면 안정적(특히 Windows/WSL/네트워크 드라이브)
       CHOKIDAR_USEPOLLING: "true"
     volumes:
