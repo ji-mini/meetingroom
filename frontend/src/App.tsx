@@ -139,6 +139,7 @@ function App() {
       return true;
     } catch (err) {
       console.error('사용자 정보 조회 실패:', err);
+      setError('로그인에 실패했습니다. (개발 모드에서는 DB에 유저가 필요합니다)');
       setUser(null);
       setIsLoggedIn(false);
       return false;
@@ -218,6 +219,7 @@ function App() {
         console.log('개발 모드 로그인 성공 (DEV_USER_EMPLOYEE_ID 또는 기본 계정)');
       } else {
         console.warn('개발 모드 로그인 실패: 백엔드 설정을 확인하세요.');
+        setError('로그인에 실패했습니다. 백엔드 로그(/api/auth/me)와 DB 사용자 상태를 확인하세요.');
       }
       return;
     }

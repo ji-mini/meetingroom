@@ -112,6 +112,60 @@ async function getDevUser(): Promise<AuthenticatedUser | null> {
     console.log(`[DEV] 로그인: ${firstUser.name} (${firstUser.employeeId}) - 첫 번째 사용자`);
     return authUser;
   }
+
+  // 4. (DEV 전용) 유저가 한 명도 없으면 기본 유저를 생성
+  console.warn('[DEV] 데이터베이스에 사용자가 없습니다. 기본 DEV 사용자를 생성합니다.');
+  const defaultEmployeeId = env.DEV_USER_EMPLOYEE_ID || 'E123456';
+  const defaultDeptId = 'DEPT_DEV';
+
+  // Department는 id에 default가 없으므로 먼저 upsert
+  const department = await prisma.department.upsert({
+    where: { id: defaultDeptId },
+    update: {
+      name: '개발팀',
+      companyName: 'DEV',
+    },
+    create: {
+      id: defaultDeptId,
+      name: '개발팀',
+      companyName: 'DEV',
+    },
+  });
+
+  const createdUser = await prisma.user.upsert({
+    where: { employeeId: defaultEmployeeId },
+    update: {
+      name: '개발자(DEV)',
+      email: 'dev@example.com',
+      deptId: department.id,
+      role: 'ADMIN',
+    },
+    create: {
+      employeeId: defaultEmployeeId,
+      name: '개발자(DEV)',
+      email: 'dev@example.com',
+      deptId: department.id,
+      role: 'ADMIN',
+    },
+    include: {
+      department: true,
+    },
+  });
+
+  const authUser = {
+    id: createdUser.id,
+    employeeId: createdUser.employeeId,
+    name: createdUser.name,
+    email: createdUser.email,
+    deptId: (createdUser as any).deptId ?? createdUser.department?.id ?? null,
+    company: createdUser.department?.companyName ?? null,
+    role: createdUser.role,
+    department: createdUser.department,
+  } as AuthenticatedUser;
+
+  devUserCache = { user: authUser, errorLogged: false };
+  console.log(`[DEV] 로그인: ${createdUser.name} (${createdUser.employeeId}) - 기본 DEV 사용자 생성`);
+  return authUser;
   
   // 사용자를 찾지 못한 경우 에러 상태 캐시
   if (!devUserCache) {
