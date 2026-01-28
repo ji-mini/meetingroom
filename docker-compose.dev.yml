@@ -32,7 +32,7 @@ services:
       # dev DB (docker)
       DATABASE_URL: "postgresql://meetingroom:meetingroom@db:5432/meetingroom_db?schema=public"
       # SSO (dev에서는 프론트가 우회하지만, 백엔드도 필요 시 사용)
-      SSO_SITE_NAME: "37AF0BE78AC74093A77E320F4CA451C4"
+      SSO_SITE_NAME: ""
       DEV_USER_EMPLOYEE_ID: ""
     volumes:
       - ./backend:/app

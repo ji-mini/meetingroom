@@ -1,0 +1,41 @@
+services:
+  backend:
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.ec2-dev
+    container_name: meetingroom-backend-ec2-dev
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env.ec2-dev
+    environment:
+      NODE_ENV: development
+      PORT: "3001"
+      # 나머지 환경변수(DATABASE_URL, FRONTEND_BASE_URL 등)는 .env.ec2-dev에서 주입
+    command: >
+      sh -lc "npm run prisma:generate &&
+              npx prisma migrate deploy &&
+              node dist/server.js"
+
+  frontend:
+    restart: unless-stopped
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: meetingroom-frontend-ec2-dev
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.ec2-dev
+    environment:
+      # 빈 값이면 frontend가 /api 프록시를 사용
+      VITE_API_BASE_URL: ""
+      # EC2 도커 네트워크 기준으로 백엔드로 프록시
+      VITE_PROXY_TARGET: "http://backend:3001"
+      CHOKIDAR_USEPOLLING: "true"
+    depends_on:
+      - backend
+    command: >
+      sh -lc "npm run dev -- --host 0.0.0.0 --port 3000"
+
