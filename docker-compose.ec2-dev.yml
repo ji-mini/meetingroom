@@ -29,22 +29,4 @@ services:
               npx prisma migrate deploy &&
               node dist/server.js"
 
-  frontend:
-    restart: unless-stopped
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    container_name: meetingroom-frontend-ec2-dev
-    env_file:
-      - .env.ec2-dev
-    environment:
-      # 빈 값이면 frontend가 /api 프록시를 사용
-      VITE_API_BASE_URL: ""
-      # EC2 도커 네트워크 기준으로 백엔드로 프록시
-      VITE_PROXY_TARGET: "http://backend:3001"
-      CHOKIDAR_USEPOLLING: "true"
-    depends_on:
-      - backend
-    command: >
-      sh -lc "npm run dev -- --host 0.0.0.0 --port 3000"
 
