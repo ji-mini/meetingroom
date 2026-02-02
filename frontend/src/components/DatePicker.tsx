@@ -13,7 +13,7 @@ type DatePickerProps = {
 };
 
 function DatePicker({ value, onChange }: DatePickerProps) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
 
   // 공휴일 목록 생성 (현재 표시되는 달 기준)
   const holidayModifiers = useMemo(() => {
@@ -30,7 +30,7 @@ function DatePicker({ value, onChange }: DatePickerProps) {
   }, []);
 
   return (
-    <Popover open={open} onOpenChange={(isOpen) => setOpen(true)}>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"

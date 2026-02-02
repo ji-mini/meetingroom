@@ -11,7 +11,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Alert } from './ui/alert';
 import { Card } from './ui/card';
-import { userApi, User } from '@/api/user.api';
+import { userApi } from '@/api/user.api';
 
 interface UserManagementDialogProps {
   open: boolean;

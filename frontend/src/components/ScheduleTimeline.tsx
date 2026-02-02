@@ -1,8 +1,6 @@
-import { format, differenceInMinutes } from 'date-fns';
-import { Plus, Trash2, X, Repeat } from 'lucide-react';
+import { Plus, Trash2, Repeat } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
-import { cn } from '@/lib/utils';
 import { isHoliday } from '@/utils/koreanHolidays';
 import type { MeetingRoom, Reservation } from '@/types';
 
@@ -31,7 +29,6 @@ function ScheduleTimeline({
   timelineStartHour = DEFAULT_START,
   timelineEndHour = DEFAULT_END,
   selectedDate,
-  onRequestCancelReservation,
   onRequestDeleteRoom,
   onRequestAddReservation,
   onRequestViewReservation,
@@ -108,12 +105,6 @@ function ScheduleTimeline({
     const widthPercent = (diff / totalMinutes) * 100;
     const offsetPercent = getOffsetPercent(startIso);
     return Math.min(100 - offsetPercent, widthPercent);
-  };
-
-  const formatTimeRange = (start: string, end: string) => {
-    const startTime = parseTimeFromISO(start);
-    const endTime = parseTimeFromISO(end);
-    return `${String(startTime.hours).padStart(2, '0')}:${String(startTime.minutes).padStart(2, '0')} ~ ${String(endTime.hours).padStart(2, '0')}:${String(endTime.minutes).padStart(2, '0')}`;
   };
 
   return (

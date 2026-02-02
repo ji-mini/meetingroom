@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { 
   format, 
   startOfMonth, 
@@ -9,17 +9,16 @@ import {
   addMonths, 
   subMonths, 
   isSameMonth, 
-  isSameDay, 
   isToday, 
   isWeekend
 } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, ChevronDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { reservationApi } from '@/api/reservation.api';
-import type { MeetingRoom, Reservation } from '@/types';
+import type { MeetingRoom } from '@/types';
 import { Button } from './ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { Card, CardContent } from './ui/card';
 import DayDetailPanel from './DayDetailPanel';
 
 interface MonthViewProps {
@@ -34,7 +33,7 @@ export default function MonthView({ rooms, onAddReservation }: MonthViewProps) {
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
   // 선택된 회의실이 없으면 첫 번째 회의실로 설정 (rooms가 로드된 후)
-  useMemo(() => {
+  useEffect(() => {
     if (!selectedRoomId && rooms.length > 0) {
       setSelectedRoomId(rooms[0].id);
     }
@@ -150,7 +149,7 @@ export default function MonthView({ rooms, onAddReservation }: MonthViewProps) {
 
           {/* Days Grid */}
           <div className="grid grid-cols-7 auto-rows-fr bg-slate-200 gap-px border-b border-slate-200">
-            {calendarDays.map((day, idx) => {
+            {calendarDays.map((day) => {
               const isCurrentMonth = isSameMonth(day, currentMonth);
               const isTodayDate = isToday(day);
               const isWeekEnd = isWeekend(day);
