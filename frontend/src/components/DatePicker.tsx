@@ -1,10 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from './ui/button';
 import { Calendar } from './ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { getHolidaysForYear } from '@/utils/koreanHolidays';
 
 type DatePickerProps = {
@@ -13,8 +10,6 @@ type DatePickerProps = {
 };
 
 function DatePicker({ value, onChange }: DatePickerProps) {
-  const [open, setOpen] = useState(false);
-
   // 공휴일 목록 생성 (현재 표시되는 달 기준)
   const holidayModifiers = useMemo(() => {
     const holidays: Date[] = [];
@@ -30,39 +25,31 @@ function DatePicker({ value, onChange }: DatePickerProps) {
   }, []);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn(
-            'w-[280px] justify-start text-left font-normal',
-            !value && 'text-muted-foreground'
-          )}
-        >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {value ? format(value, 'yyyy년 MM월 dd일') : <span>날짜 선택</span>}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="p-0 w-auto scale-90 origin-top-left">
-        <Calendar
-          mode="single"
-          selected={value}
-          onSelect={(date) => date && onChange(date)}
-          initialFocus
-          disabled={(date) => {
-            // 토요일(6)과 일요일(0) 비활성화
-            const day = date.getDay();
-            return day === 0 || day === 6;
-          }}
-          modifiers={{
-            holiday: holidayModifiers,
-          }}
-          modifiersClassNames={{
-            holiday: 'text-red-600 font-semibold',
-          }}
-        />
-      </PopoverContent>
-    </Popover>
+    <div className="w-[280px] rounded-lg border border-slate-100 bg-white shadow-sm">
+      <div className="flex items-center gap-2 px-4 pt-4">
+        <CalendarIcon className="h-4 w-4 text-slate-500" />
+        <div className="text-sm font-semibold text-slate-800">
+          {format(value, 'yyyy년 MM월 dd일')}
+        </div>
+      </div>
+      <Calendar
+        mode="single"
+        selected={value}
+        onSelect={(date) => date && onChange(date)}
+        initialFocus
+        disabled={(date) => {
+          // 토요일(6)과 일요일(0) 비활성화
+          const day = date.getDay();
+          return day === 0 || day === 6;
+        }}
+        modifiers={{
+          holiday: holidayModifiers,
+        }}
+        modifiersClassNames={{
+          holiday: 'text-red-600 font-semibold',
+        }}
+      />
+    </div>
   );
 }
 
