@@ -1,4 +1,4 @@
-name: DevDeploy (EC2)
+name: DevDeploy (EC2 Self-Hosted)
 
 on:
   push:
@@ -6,15 +6,10 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, dev, meetingroom]
     steps:
-      - name: SSH into EC2 and deploy
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.EC2_PORT }}
-          script: |
-            set -e
-            ~/meetingroom/deploy-dev.sh
+      - name: Deploy on EC2
+        run: |
+          set -e
+          ~/meetingroom/deploy-dev.sh
+          
