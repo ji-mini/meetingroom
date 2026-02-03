@@ -4,6 +4,10 @@ on:
   push:
     branches: ["develop"]
 
+concurrency:
+  group: meetingroom-dev-deploy
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: [self-hosted, dev, meetingroom]
@@ -12,4 +16,3 @@ jobs:
         run: |
           set -e
           ~/meetingroom/deploy-dev.sh
-          
