@@ -2,10 +2,11 @@ services:
   db:
     image: postgres:16-alpine
     container_name: meetingroom-db-prd
+    restart: unless-stopped
     environment:
       POSTGRES_DB: meetingroom_db
       POSTGRES_USER: meetingroom
-      POSTGRES_PASSWORD: meetingroom
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - meetingroom_db_prd:/var/lib/postgresql/data
     healthcheck:
@@ -19,25 +20,27 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: meetingroom-backend-prd
+    restart: unless-stopped
+    env_file:
+      - .env.prd
     environment:
       NODE_ENV: production
       PORT: "3001"
-      FRONTEND_BASE_URL: "http://localhost:3000"
-      DATABASE_URL: "postgresql://meetingroom:meetingroom@db:5432/meetingroom_db?schema=public"
-      SSO_SITE_NAME: "37AF0BE78AC74093A77E320F4CA451C4"
+      # DB는 같은 compose의 db를 바라봄
+      DATABASE_URL: "postgresql://meetingroom:${POSTGRES_PASSWORD}@db:5432/meetingroom_db?schema=public"
     depends_on:
       db:
         condition: service_healthy
     command: >
-      sh -lc "node -v &&
-              npx prisma migrate deploy &&
-              npm run start"
+      sh -lc "npx prisma migrate deploy &&
+              node dist/server.js"
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: meetingroom-frontend-prd
+    restart: unless-stopped
     ports:
       - "3000:80"
     depends_on:

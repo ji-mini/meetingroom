@@ -12,15 +12,11 @@ build/
 
 # Environment
 .env
-.env*
-.env.local
-.env.development
-.env.production
-.env.development.local
-.env.test.local
-.env.production.local
-backend/.env*
-frontend/.env*
+.env.*
+backend/.env
+backend/.env.*
+frontend/.env
+frontend/.env.*
 
 # Logs
 npm-debug.log*

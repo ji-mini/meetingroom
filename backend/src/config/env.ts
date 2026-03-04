@@ -86,6 +86,29 @@ function loadFallbackEnvIfNeeded(reason: string) {
 // NODE_ENV 확인 (기본값: development)
 const nodeEnv = process.env.NODE_ENV || 'development';
 
+// 컨테이너/배포 환경에서는 docker-compose 등으로 이미 환경변수가 주입되는 경우가 많습니다.
+// 이때 .env 파일을 찾지 못해 경고 로그가 과도하게 찍히는 것을 방지하기 위해,
+// 이미 유효한 DATABASE_URL이 환경변수로 존재하면 dotenv 로딩을 생략합니다.
+const preNormalizedDbUrl = process.env.DATABASE_URL
+  ? normalizeEnvValue(process.env.DATABASE_URL)
+  : '';
+if (preNormalizedDbUrl) {
+  process.env.DATABASE_URL = preNormalizedDbUrl;
+}
+const hasValidDatabaseUrlFromEnv = preNormalizedDbUrl
+  ? tryParseDatabaseUrl(preNormalizedDbUrl) !== null
+  : false;
+
+// 도커 컨테이너 내부에서는 env_file로 환경변수를 주입하는 것이 일반적이므로,
+// 컨테이너 안에서 유효한 DATABASE_URL이 이미 있으면 .env 파일 로드를 생략합니다.
+let isRunningInDocker = false;
+try {
+  isRunningInDocker = fs.existsSync('/.dockerenv');
+} catch {
+  isRunningInDocker = false;
+}
+const shouldSkipDotenvLoad = isRunningInDocker && hasValidDatabaseUrlFromEnv;
+
 // 환경 파일 경로 결정
 const envFile = nodeEnv === 'production' 
   ? '.env.production' 
@@ -94,40 +117,44 @@ const envFile = nodeEnv === 'production'
 const envPath = path.resolve(__dirname, '../../', envFile);
 const fallbackPath = path.resolve(__dirname, '../../', '.env');
 
-// 환경 파일 로드
-let result = dotenv.config({ path: envPath });
-let loadedFile = envFile;
+// 환경 파일 로드 (필요한 경우에만)
+let loadedFile = shouldSkipDotenvLoad ? '(process.env)' : envFile;
 
-if (result.error) {
-  console.warn(`⚠️  환경 파일 로드 실패: ${envFile}`);
-  console.warn(`   경로: ${envPath}`);
-  console.warn(`   에러: ${result.error.message}`);
-  
-  // 개발 모드에서는 기본 .env도 시도
-  if (nodeEnv !== 'production') {
-    const fallbackResult = dotenv.config({ path: fallbackPath, override: false });
-    if (fallbackResult.error) {
-      console.warn(`⚠️  기본 .env 파일도 찾을 수 없습니다.`);
-      console.warn(`   경로: ${fallbackPath}`);
-      console.warn(`   💡 해결 방법: backend/.env.development 파일을 생성하거나 기존 .env 파일을 확인하세요.`);
-    } else {
-      console.log(`ℹ️  기본 .env 파일을 사용합니다.`);
-      result = fallbackResult; // fallback 성공 시 result 업데이트
-      loadedFile = '.env';
-    }
-  }
-} else {
-  // 환경 파일은 로드되었지만 DATABASE_URL이 없을 수 있음
-  // 개발 모드에서 DATABASE_URL이 없으면 .env도 시도
-  if (nodeEnv !== 'production' && !process.env.DATABASE_URL) {
-    console.warn(`⚠️  ${envFile}에 DATABASE_URL이 없습니다. 기본 .env 파일을 시도합니다.`);
-    const fallbackResult = dotenv.config({ path: fallbackPath, override: false });
-    if (!fallbackResult.error && process.env.DATABASE_URL) {
-      console.log(`ℹ️  기본 .env 파일에서 DATABASE_URL을 사용합니다.`);
-      loadedFile = '.env (fallback)';
+if (!shouldSkipDotenvLoad) {
+  const result = dotenv.config({ path: envPath });
+
+  if (result.error) {
+    console.warn(`⚠️  환경 파일 로드 실패: ${envFile}`);
+    console.warn(`   경로: ${envPath}`);
+    console.warn(`   에러: ${result.error.message}`);
+
+    // 개발 모드에서는 기본 .env도 시도
+    if (nodeEnv !== 'production') {
+      const fallbackResult = dotenv.config({ path: fallbackPath, override: false });
+      if (fallbackResult.error) {
+        console.warn(`⚠️  기본 .env 파일도 찾을 수 없습니다.`);
+        console.warn(`   경로: ${fallbackPath}`);
+        console.warn(
+          `   💡 해결 방법: DATABASE_URL을 환경변수로 주입하거나(.env.ec2-dev / CI secret 등) backend/.env.development 또는 backend/.env 파일을 확인하세요.`
+        );
+      } else {
+        console.log(`ℹ️  기본 .env 파일을 사용합니다.`);
+        loadedFile = '.env';
+      }
     }
   } else {
-    console.log(`✅ 환경 파일 로드 완료: ${envFile}`);
+    // 환경 파일은 로드되었지만 DATABASE_URL이 없을 수 있음
+    // 개발 모드에서 DATABASE_URL이 없으면 .env도 시도
+    if (nodeEnv !== 'production' && !process.env.DATABASE_URL) {
+      console.warn(`⚠️  ${envFile}에 DATABASE_URL이 없습니다. 기본 .env 파일을 시도합니다.`);
+      const fallbackResult = dotenv.config({ path: fallbackPath, override: false });
+      if (!fallbackResult.error && process.env.DATABASE_URL) {
+        console.log(`ℹ️  기본 .env 파일에서 DATABASE_URL을 사용합니다.`);
+        loadedFile = '.env (fallback)';
+      }
+    } else {
+      console.log(`✅ 환경 파일 로드 완료: ${envFile}`);
+    }
   }
 }
 
