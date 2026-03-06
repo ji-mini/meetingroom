@@ -1,22 +1,4 @@
 services:
-  db:
-    restart: unless-stopped
-    image: postgres:16-alpine
-    container_name: meetingroom-db-dev
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_DB: meetingroom_db
-      POSTGRES_USER: meetingroom
-      POSTGRES_PASSWORD: meetingroom
-    volumes:
-      - meetingroom_db_dev:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U meetingroom -d meetingroom_db"]
-      interval: 3s
-      timeout: 3s
-      retries: 20
-
   backend:
     restart: unless-stopped
     build:
@@ -25,21 +7,11 @@ services:
     container_name: meetingroom-backend-dev
     ports:
       - "3001:3001"
-    environment:
-      NODE_ENV: development
-      PORT: "3001"
-      FRONTEND_BASE_URL: "http://localhost:3000"
-      # dev DB (docker)
-      DATABASE_URL: "postgresql://meetingroom:meetingroom@db:5432/meetingroom_db?schema=public"
-      # SSO (dev에서는 프론트가 우회하지만, 백엔드도 필요 시 사용)
-      SSO_SITE_NAME: ""
-      DEV_USER_EMPLOYEE_ID: ""
+    env_file:
+      - /home/ec2-user/apps/meetingroom/env/backend.dev.env
     volumes:
       - ./backend:/app
       - backend_node_modules_dev:/app/node_modules
-    depends_on:
-      db:
-        condition: service_healthy
     command: >
       sh -lc "npm run prisma:generate &&
               npx prisma migrate deploy &&
@@ -68,7 +40,6 @@ services:
       sh -lc "npm ci && npm run dev -- --host 0.0.0.0 --port 3000"
 
 volumes:
-  meetingroom_db_dev:
   backend_node_modules_dev:
   frontend_node_modules_dev:
 
