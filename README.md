@@ -59,9 +59,9 @@ cd ../frontend && npm install
 1. `backend/.env.development` 파일 생성 (개발 환경용)
    ```bash
    cd backend
-   # (리포에 .env* dotfile 예시는 포함하지 않습니다)
+   # (리포에는 실제 .env 파일은 포함하지 않습니다)
    # 아래 예시 파일을 복사해 ".env.development"로 이름을 바꿔 사용하세요.
-   cp env.development.example .env.development
+   cp .env.development.example .env.development
    ```
 
 2. `.env.development` 파일을 열어 실제 값으로 수정:
@@ -80,7 +80,7 @@ cd ../frontend && npm install
 1. `frontend/.env.development` 파일 생성 (개발 환경용)
    ```bash
    cd frontend
-   cp env.development.example .env.development
+   cp .env.development.example .env.development
    ```
 
 2. `.env.development` 파일 내용 (개발 환경에서는 Vite 프록시 사용):

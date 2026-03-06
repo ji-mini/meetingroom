@@ -135,7 +135,7 @@ if (!shouldSkipDotenvLoad) {
         console.warn(`⚠️  기본 .env 파일도 찾을 수 없습니다.`);
         console.warn(`   경로: ${fallbackPath}`);
         console.warn(
-          `   💡 해결 방법: DATABASE_URL을 환경변수로 주입하거나(.env.ec2-dev / CI secret 등) backend/.env.development 또는 backend/.env 파일을 확인하세요.`
+          `   💡 해결 방법: DATABASE_URL을 환경변수로 주입하거나(.env.ec2-dev / CI secret 등) backend/.env.development 파일을 생성하세요. (템플릿: backend/.env.development.example)`
         );
       } else {
         console.log(`ℹ️  기본 .env 파일을 사용합니다.`);
@@ -191,8 +191,8 @@ if (!env.DATABASE_URL) {
   console.error('❌ DATABASE_URL이 설정되지 않았습니다.');
   console.error('');
   console.error('💡 해결 방법:');
-  console.error('   1. backend/.env.development 파일을 생성하세요.');
-  console.error('   2. 또는 backend/.env 파일에 DATABASE_URL을 설정하세요.');
+  console.error('   1. DATABASE_URL을 환경변수로 주입하세요. (예: docker-compose env_file / CI secret)');
+  console.error('   2. 또는 backend/.env.development 파일을 생성하세요. (템플릿: backend/.env.development.example)');
   console.error('');
   console.error('   예시:');
   console.error('   DATABASE_URL="postgresql://user:password@localhost:5432/meetingroom_db?schema=public"');

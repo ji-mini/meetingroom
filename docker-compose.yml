@@ -1,0 +1,6 @@
+services:
+  noop:
+    image: alpine:3.20
+    command: ["sh", "-lc", "echo 'Use: docker compose -f docker-compose.dev.yml up  or  docker compose -f docker-compose.prd.yml up'"]
+    profiles: ["noop"]
+

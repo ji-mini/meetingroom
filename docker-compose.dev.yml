@@ -47,9 +47,7 @@ services:
 
   frontend:
     restart: unless-stopped
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
+    image: node:22-alpine
     container_name: meetingroom-frontend-dev
     ports:
       - "3000:3000"
@@ -60,13 +58,14 @@ services:
       VITE_PROXY_TARGET: "http://backend:3001"
       # 파일 변경 감지 이슈가 있으면 true로 두면 안정적(특히 Windows/WSL/네트워크 드라이브)
       CHOKIDAR_USEPOLLING: "true"
+    working_dir: /app
     volumes:
       - ./frontend:/app
       - frontend_node_modules_dev:/app/node_modules
     depends_on:
       - backend
     command: >
-      sh -lc "npm run dev -- --host 0.0.0.0 --port 3000"
+      sh -lc "npm ci && npm run dev -- --host 0.0.0.0 --port 3000"
 
 volumes:
   meetingroom_db_dev:
